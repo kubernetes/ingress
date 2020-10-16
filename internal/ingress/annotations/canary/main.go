@@ -32,6 +32,7 @@ type canary struct {
 type Config struct {
 	Enabled       bool
 	Weight        int
+	WeightTotal   int
 	Header        string
 	HeaderValue   string
 	HeaderPattern string
@@ -57,6 +58,11 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.Weight, err = parser.GetIntAnnotation("canary-weight", ing)
 	if err != nil {
 		config.Weight = 0
+	}
+
+	config.WeightTotal, err = parser.GetIntAnnotation("canary-weight-total", ing)
+	if err != nil {
+		config.WeightTotal = 100
 	}
 
 	config.Header, err = parser.GetStringAnnotation("canary-by-header", ing)
