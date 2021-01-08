@@ -344,27 +344,32 @@ func TestLuaSharedDictsParsing(t *testing.T) {
 		{
 			name:   "configuration_data only",
 			entry:  map[string]string{"lua-shared-dicts": "configuration_data:5"},
-			expect: map[string]int{"configuration_data": 5},
+			expect: map[string]int{"configuration_data": 5000},
 		},
 		{
 			name:   "certificate_data only",
 			entry:  map[string]string{"lua-shared-dicts": "certificate_data: 4"},
-			expect: map[string]int{"certificate_data": 4},
+			expect: map[string]int{"certificate_data": 4000},
 		},
 		{
 			name:   "custom dicts",
 			entry:  map[string]string{"lua-shared-dicts": "configuration_data:   10, my_random_dict:15 ,   another_example:2"},
-			expect: map[string]int{"configuration_data": 10, "my_random_dict": 15, "another_example": 2},
+			expect: map[string]int{"configuration_data": 10000, "my_random_dict": 15000, "another_example": 2000},
 		},
 		{
 			name:   "invalid size value should be ignored",
-			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a"},
-			expect: map[string]int{"mydict": 10},
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a, bad_mb_dict:10mb"},
+			expect: map[string]int{"mydict": 10000},
 		},
 		{
 			name:   "dictionary size can not be larger than 200",
-			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 201"},
-			expect: map[string]int{"mydict": 10},
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 201, invalid_kb: 200001k"},
+			expect: map[string]int{"mydict": 10000},
+		},
+		{
+			name:   "specified units are interpreted properly",
+			entry:  map[string]string{"lua-shared-dicts": "kb_dict_a: 512k, mb_dict_a: 30m, kb_dict_b:16K, mb_dict_b:4M"},
+			expect: map[string]int{"kb_dict_a": 512, "mb_dict_a": 30000, "kb_dict_b": 16, "mb_dict_b": 4000},
 		},
 	}
 
@@ -415,6 +420,79 @@ func TestSplitAndTrimSpace(t *testing.T) {
 		data := splitAndTrimSpace(tc.input, ",")
 		if !reflect.DeepEqual(data, tc.expect) {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, data)
+		}
+	}
+}
+
+func TestDictStrToKb(t *testing.T) {
+	testCases := []struct {
+		name   string
+		input  string
+		expect int
+	}{
+		{
+			name:   "unitless int size converted to kb",
+			input:  "50",
+			expect: 50000,
+		},
+		{
+			name:   "lowercase k accepted",
+			input:  "512k",
+			expect: 512,
+		},
+		{
+			name:   "uppercase K accepted",
+			input:  "512K",
+			expect: 512,
+		},
+		{
+			name:   "lowercase m accepted",
+			input:  "10m",
+			expect: 10000,
+		},
+		{
+			name:   "uppercase M accepted",
+			input:  "10M",
+			expect: 10000,
+		},
+		{
+			name:   "trailing characters fail",
+			input:  "50kb",
+			expect: -1,
+		},
+		{
+			name:   "leading characters fail",
+			input:  " 50k",
+			expect: -1,
+		},
+	}
+	for _, tc := range testCases {
+		if size := dictStrToKb(tc.input); size != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, size)
+		}
+	}
+}
+
+func TestDictKbToStr(t *testing.T) {
+	testCases := []struct {
+		name   string
+		input  int
+		expect string
+	}{
+		{
+			name:   "mod 1000 reports as M",
+			input:  5000,
+			expect: "5M",
+		},
+		{
+			name:   "non-mod 1000 reports as K",
+			input:  5120,
+			expect: "5120K",
+		},
+	}
+	for _, tc := range testCases {
+		if sizeStr := dictKbToStr(tc.input); sizeStr != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, sizeStr)
 		}
 	}
 }

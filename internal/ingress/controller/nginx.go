@@ -230,7 +230,7 @@ type NGINXController struct {
 	// runningConfig contains the running configuration in the Backend
 	runningConfig *ingress.Configuration
 
-	t ngx_template.TemplateWriter
+	t ngx_template.Writer
 
 	resolver []net.IP
 
