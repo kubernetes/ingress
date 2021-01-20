@@ -14,7 +14,7 @@ metadata:
   {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
 spec:
-  type: "{{ .Values.controller.service.type }}"
+  type: "{{ default .Values.controller.service.type .Values.controller.service.internal.type }}"
 {{- if .Values.controller.service.internal.loadBalancerIP }}
   loadBalancerIP: {{ .Values.controller.service.internal.loadBalancerIP }}
 {{- end }}
