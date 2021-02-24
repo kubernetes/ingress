@@ -123,6 +123,10 @@ type TrafficShapingPolicy struct {
 	HeaderPattern string `json:"headerPattern"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
+	// the value can be "header" or "cookie", which one will be keeping consistency
+	CanaryConsistency string `json:"canaryConsistency"`
+	//it's optional, the different seeds can result different hashcode
+	HashSeed string `json:"hashSeed"`
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
