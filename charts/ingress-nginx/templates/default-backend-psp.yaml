@@ -6,6 +6,9 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
+    {{- with .Values.defaultBackend.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   allowPrivilegeEscalation: false
   fsGroup:

@@ -5,6 +5,9 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
+    {{- with .Values.controller.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- if .Values.controller.udp.annotations }}
   annotations: {{ toYaml .Values.controller.udp.annotations | nindent 4 }}
 {{- end }}

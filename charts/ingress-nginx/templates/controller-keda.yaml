@@ -7,6 +7,9 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
+    {{- with .Values.controller.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
   {{- if .Values.controller.keda.scaledObject.annotations }}
   annotations: {{ toYaml .Values.controller.keda.scaledObject.annotations | nindent 4 }}
