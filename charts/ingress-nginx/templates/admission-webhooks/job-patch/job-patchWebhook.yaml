@@ -27,7 +27,7 @@ spec:
         {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: admission-webhook
         {{- with .Values.controller.admissionWebhooks.patch.labels }}
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
     {{- if .Values.controller.admissionWebhooks.patch.priorityClassName }}
