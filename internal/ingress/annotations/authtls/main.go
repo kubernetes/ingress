@@ -31,10 +31,12 @@ import (
 const (
 	defaultAuthTLSDepth     = 1
 	defaultAuthVerifyClient = "on"
+	defaultOCSP             = "off"
 )
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
+	authOCSPRegex         = regexp.MustCompile(`on|off|leaf`)
 )
 
 // Config contains the AuthSSLCert used for mutual authentication
@@ -45,6 +47,7 @@ type Config struct {
 	ValidationDepth    int    `json:"validationDepth"`
 	ErrorPage          string `json:"errorPage"`
 	PassCertToUpstream bool   `json:"passCertToUpstream"`
+	OCSP               string `json:"ocsp"`
 	AuthTLSError       string
 }
 
@@ -69,6 +72,9 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 		return false
 	}
 	if assl1.PassCertToUpstream != assl2.PassCertToUpstream {
+		return false
+	}
+	if assl1.OCSP != assl2.OCSP {
 		return false
 	}
 
@@ -125,6 +131,11 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.PassCertToUpstream, err = parser.GetBoolAnnotation("auth-tls-pass-certificate-to-upstream", ing)
 	if err != nil {
 		config.PassCertToUpstream = false
+	}
+
+	config.OCSP, err = parser.GetStringAnnotation("auth-tls-ocsp", ing)
+	if err != nil || !authOCSPRegex.MatchString(config.OCSP) {
+		config.OCSP = defaultOCSP
 	}
 
 	return config, nil
