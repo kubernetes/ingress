@@ -1033,6 +1033,7 @@ const zipkinTmpl = `{
 
 const jaegerTmpl = `{
   "service_name": "{{ .JaegerServiceName }}",
+  "propagation_format": "{{ .JaegerPropagationFormat }}",
   "sampler": {
 	"type": "{{ .JaegerSamplerType }}",
 	"param": {{ .JaegerSamplerParam }},

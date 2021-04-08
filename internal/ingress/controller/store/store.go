@@ -457,8 +457,8 @@ func New(
 							klog.ErrorS(err, "could not find Ingress in local store", "ingress", ingKey)
 							continue
 						}
-						store.syncIngress(ing)
 						store.syncSecrets(ing)
+						store.syncIngress(ing)
 					}
 					updateCh.In() <- Event{
 						Type: UpdateEvent,

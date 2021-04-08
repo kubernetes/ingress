@@ -562,6 +562,9 @@ type Configuration struct {
 	// Default: nginx
 	JaegerServiceName string `json:"jaeger-service-name"`
 
+	// JaegerPropagationFormat specifies the traceparent/tracestate propagation format
+	JaegerPropagationFormat string `json:"jaeger-propagation-format"`
+
 	// JaegerSamplerType specifies the sampler to be used when sampling traces.
 	// The available samplers are: const, probabilistic, ratelimiting, remote
 	// Default: const
@@ -867,6 +870,7 @@ func NewDefault() Configuration {
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
 		JaegerCollectorPort:                    6831,
+		JaegerPropagationFormat:                "jaeger",
 		JaegerServiceName:                      "nginx",
 		JaegerSamplerType:                      "const",
 		JaegerSamplerParam:                     "1",

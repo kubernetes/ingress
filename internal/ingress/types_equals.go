@@ -549,6 +549,9 @@ func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
 	if s1.CASHA != s2.CASHA {
 		return false
 	}
+	if s1.CRLSHA != s2.CRLSHA {
+		return false
+	}
 	if s1.PemSHA != s2.PemSHA {
 		return false
 	}

@@ -1,5 +1,31 @@
 # Changelog
 
+### 0.45.0
+
+**Image:**
+
+- `k8s.gcr.io/ingress-nginx/controller:v0.45.0@sha256:c4390c53f348c3bd4e60a5dd6a11c35799ae78c49388090140b9d72ccede1755`
+
+_New Features:_
+
+- Update the Ingress Controller Image to correct OpenSSL CVEs
+- Add support for Jaeger Endpoint [#6884](https://github.com/kubernetes/ingress-nginx/pull/6884)
+- Allow Multiple Publish Status Addresses [#6856](https://github.com/kubernetes/ingress-nginx/pull/6856)
+
+_Changes:_
+
+- [X] [#6995](https://github.com/kubernetes/ingress-nginx/pull/6995) updating nginx base image across repo
+- [X] [#6983](https://github.com/kubernetes/ingress-nginx/pull/6983) Expose Geo IP subdivision 1 as variables
+- [X] [#6979](https://github.com/kubernetes/ingress-nginx/pull/6979) Changed servicePort value for metrics
+- [X] [#6971](https://github.com/kubernetes/ingress-nginx/pull/6971) Fix crl not reload when crl got updated in the ca secret
+- [X] [#6957](https://github.com/kubernetes/ingress-nginx/pull/6957) Add ability to specify automountServiceAccountToken
+- [X] [#6956](https://github.com/kubernetes/ingress-nginx/pull/6956) update nginx base image, handle jaeger propagation format 
+- [X] [#6936](https://github.com/kubernetes/ingress-nginx/pull/6936) update tracing libraries for opentracing 1.6.0 
+- [X] [#6908](https://github.com/kubernetes/ingress-nginx/pull/6908) feat(chart) Add volumes to default-backend deployment #6908 
+- [X] [#6884](https://github.com/kubernetes/ingress-nginx/pull/6884) jaeger-endpoint feature for non-agent trace collectors
+- [X] [#6856](https://github.com/kubernetes/ingress-nginx/pull/6856) Allow multiple publish status addresses
+- [X] [#6971](https://github.com/kubernetes/ingress-nginx/pull/6971) Fix bug related to CRL update
+
 ### 0.44.0
 
 **Image:**

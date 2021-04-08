@@ -4,6 +4,22 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.29.0
+
+- [X] [#6945](https://github.com/kubernetes/ingress-nginx/pull/7020) Add option to specify job label for ServiceMonitor
+
+### 3.28.0
+
+- [ ] [#6900](https://github.com/kubernetes/ingress-nginx/pull/6900) Support existing PSPs
+
+### 3.27.0
+
+- Update ingress-nginx v0.45.0
+
+### 3.26.0
+
+- [X] [#6979](https://github.com/kubernetes/ingress-nginx/pull/6979) Changed servicePort value for metrics
+
 ### 3.25.0
 
 - [X] [#6957](https://github.com/kubernetes/ingress-nginx/pull/6957) Add ability to specify automountServiceAccountToken

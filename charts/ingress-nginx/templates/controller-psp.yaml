@@ -1,4 +1,4 @@
-{{- if .Values.podSecurityPolicy.enabled -}}
+{{- if and .Values.podSecurityPolicy.enabled (empty .Values.controller.existingPsp) -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:

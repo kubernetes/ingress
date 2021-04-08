@@ -25,6 +25,10 @@ rules:
     resources: ['podsecuritypolicies']
     verbs:     ['use']
     resourceNames:
+    {{- with .Values.controller.admissionWebhooks.existingPsp }}
+    - {{ . }}
+    {{- else }}
     - {{ include "ingress-nginx.fullname" . }}-admission
+    {{- end }}
 {{- end }}
 {{- end }}

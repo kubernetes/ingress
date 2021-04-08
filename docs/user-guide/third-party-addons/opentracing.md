@@ -64,6 +64,9 @@ jaeger-endpoint
 # specifies the service name to use for any traces created, Default: nginx
 jaeger-service-name
 
+# specifies the traceparent/tracestate propagation format
+jaeger-propagation-format
+
 # specifies the sampler to be used when sampling traces.
 # The available samplers are: const, probabilistic, ratelimiting, remote, Default: const
 jaeger-sampler-type

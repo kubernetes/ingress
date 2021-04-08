@@ -17,6 +17,8 @@ limitations under the License.
 package settings
 
 import (
+	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -31,8 +33,9 @@ const (
 
 	zipkinCollectorHost = "zipkin-collector-host"
 
-	jaegerCollectorHost = "jaeger-collector-host"
-	jaegerSamplerHost   = "jaeger-sampler-host"
+	jaegerCollectorHost     = "jaeger-collector-host"
+	jaegerSamplerHost       = "jaeger-sampler-host"
+	jaegerPropagationFormat = "jaeger-propagation-format"
 	// jaegerEndpoint      = "jaeger-endpoint"
 
 	datadogCollectorHost = "datadog-collector-host"
@@ -173,6 +176,36 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 		log, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
 		assert.NotContains(ginkgo.GinkgoT(), log, "Unexpected failure reloading the backend", "reloading nginx after a configmap change")
+	})
+
+	ginkgo.It("should propagate the w3c header when configured with jaeger", func() {
+		host := "jaeger-w3c"
+		config := map[string]string{}
+		config[enableOpentracing] = "true"
+		config[jaegerCollectorHost] = "127.0.0.1"
+		config[jaegerPropagationFormat] = "w3c"
+		f.SetNginxConfigMapData(config)
+
+		framework.Sleep(10 * time.Second)
+		log, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.NotContains(ginkgo.GinkgoT(), log, "Unexpected failure reloading the backend", "reloading nginx after a configmap change")
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Match("traceparent=[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}")
 	})
 
 	/*

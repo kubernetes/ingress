@@ -1,4 +1,4 @@
-{{- if and .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled -}}
+{{- if and .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled (empty .Values.defaultBackend.existingPsp) -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:

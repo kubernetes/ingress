@@ -449,18 +449,19 @@
 
 - [Check limit-rate config](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/limit_rate.go#L36)
 
-### [Configure OpenTracing](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L43)
+### [Configure OpenTracing](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L47)
 
-- [should not exists opentracing directive](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L53)
-- [should exists opentracing directive when is enabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L66)
-- [should not exists opentracing_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L80)
-- [should exists opentracing_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L95)
-- [should not exists opentracing_location_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L110)
-- [should exists opentracing_location_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L125)
-- [should enable opentracing using zipkin](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L140)
-- [should enable opentracing using jaeger](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L152)
-- [should enable opentracing using jaeger with sampler host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L164)
-- [should enable opentracing using datadog](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L177)
+- [should not exists opentracing directive](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L57)
+- [should exists opentracing directive when is enabled](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L70)
+- [should not exists opentracing_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L84)
+- [should exists opentracing_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L99)
+- [should not exists opentracing_location_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L114)
+- [should exists opentracing_location_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L129)
+- [should enable opentracing using zipkin](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L144)
+- [should enable opentracing using jaeger](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L156)
+- [should enable opentracing using jaeger with sampler host](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L168)
+- [should propagate the w3c header when configured with jaeger](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L181)
+- [should enable opentracing using datadog](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/opentracing.go#L225)
 
 ### [use-forwarded-headers](https://github.com/kubernetes/ingress-nginx/tree/master/test/e2e/settings/forwarded_headers.go#L30)
 

@@ -22,6 +22,9 @@ spec:
     {{- if .Values.controller.metrics.serviceMonitor.metricRelabelings }}
       metricRelabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.metricRelabelings | nindent 8 }}
     {{- end }}
+{{- if .Values.controller.metrics.serviceMonitor.jobLabel }}
+  jobLabel: {{ .Values.controller.metrics.serviceMonitor.jobLabel | quote }}
+{{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
   namespaceSelector: {{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | nindent 4 }}
 {{ else }}

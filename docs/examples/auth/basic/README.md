@@ -112,15 +112,16 @@ server_version=nginx: 1.9.11 - lua: 10001
 
 HEADERS RECEIVED:
 accept=*/*
-authorization=Basic Zm9vOmJhcg==
 connection=close
 host=foo.bar.com
 user-agent=curl/7.43.0
+x-request-id=e426c7829ef9f3b18d40730857c3eddb
 x-forwarded-for=10.2.29.1
 x-forwarded-host=foo.bar.com
 x-forwarded-port=80
 x-forwarded-proto=http
 x-real-ip=10.2.29.1
+x-scheme=http
 BODY:
 * Connection #0 to host 10.2.29.4 left intact
 -no body in request-
