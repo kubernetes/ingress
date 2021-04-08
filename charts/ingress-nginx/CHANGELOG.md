@@ -4,9 +4,13 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 
 ### Unreleased
 
+### 3.30.0
+
+- [X] [#6992](https://github.com/kubernetes/ingress-nginx/pull/6992) Add ability to specify labels for all resources
+
 ### 3.29.0
 
-- [X] [#6945](https://github.com/kubernetes/ingress-nginx/pull/7020) Add option to specify job label for ServiceMonitor
+- [X] [#7020](https://github.com/kubernetes/ingress-nginx/pull/7020) Add option to specify job label for ServiceMonitor
 
 ### 3.28.0
 
