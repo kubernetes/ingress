@@ -1,0 +1,15 @@
+{
+	"CN": "give@joost.coffee",
+	"key": {
+		"algo": "rsa",
+		"size": 2048
+	},
+	"names": [
+		{
+			"C": "US",
+			"L": "San Francisco",
+			"OU": "Some location",
+			"ST": "CA"
+		}
+	]
+}

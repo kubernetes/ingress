@@ -1,0 +1,14 @@
+{
+	"CN": "OCSP Responder",
+	"key": {
+		"algo": "rsa",
+		"size": 2048
+	},
+	"names": [{
+		"C": "US",
+		"L": "SF",
+		"O": "kubernetes",
+		"OU": "ingress-nginx",
+		"ST": "CA"
+	}]
+}
