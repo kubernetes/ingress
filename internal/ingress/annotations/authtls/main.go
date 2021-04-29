@@ -17,6 +17,8 @@ limitations under the License.
 package authtls
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	networking "k8s.io/api/networking/v1beta1"
 
@@ -136,6 +138,11 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.OCSP, err = parser.GetStringAnnotation("auth-tls-ocsp", ing)
 	if err != nil || !authOCSPRegex.MatchString(config.OCSP) {
 		config.OCSP = defaultOCSP
+	}
+
+	// OCSP requires auth-tls-verify-client to be set
+	if strings.EqualFold(config.OCSP, "on") && !strings.EqualFold(config.VerifyClient, "on") {
+		return nil, ing_errors.NewInvalidAnnotationConfiguration("auth-tls-ocsp", "requires auth-tls-verify-client to be set on")
 	}
 
 	return config, nil

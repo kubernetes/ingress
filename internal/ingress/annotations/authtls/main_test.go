@@ -17,6 +17,7 @@ limitations under the License.
 package authtls
 
 import (
+	"strings"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -91,7 +92,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("auth-tls-verify-depth")] = "1"
 	data[parser.GetAnnotationWithPrefix("auth-tls-error-page")] = "ok.com/error"
 	data[parser.GetAnnotationWithPrefix("auth-tls-pass-certificate-to-upstream")] = "true"
-	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "on"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "off"
 
 	ing.SetAnnotations(data)
 
@@ -126,8 +127,8 @@ func TestAnnotations(t *testing.T) {
 	if u.PassCertToUpstream != true {
 		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
 	}
-	if u.OCSP != "on" {
-		t.Errorf("expected %v but got %v", "on", u.OCSP)
+	if u.OCSP != "off" {
+		t.Errorf("expected %v but got %v", "off", u.OCSP)
 	}
 }
 
@@ -156,6 +157,17 @@ func TestInvalidAnnotations(t *testing.T) {
 	_, err = NewParser(fakeSecret).Parse(ing)
 	if err == nil {
 		t.Errorf("Expected error with ingress but got nil")
+	}
+
+	// Enabling OCSP without client verification
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
+	data[parser.GetAnnotationWithPrefix("auth-tls-ocsp")] = "on"
+	ing.SetAnnotations(data)
+
+	_, err = NewParser(fakeSecret).Parse(ing)
+	if err == nil || !strings.EqualFold(err.Error(), "the annotation auth-tls-ocsp does not contain a valid configuration: requires auth-tls-verify-client to be set on") {
+		t.Errorf("Expected a auth-tls-ocsp error but got: %v", err)
 	}
 
 	// Invalid optional Annotations
