@@ -151,7 +151,7 @@ controller:
   annotations: {}
   #  keel.sh/pollSchedule: "@every 60m"
 
-  ## Labels to be added to the controller Deployment or DaemonSet
+  ## Labels to be added to the controller Deployment or DaemonSet and other resources that do not have option to specify labels
   ##
   labels: {}
   #  keel.sh/policy: patch
@@ -475,6 +475,8 @@ controller:
     key: "/usr/local/certificates/key"
     namespaceSelector: {}
     objectSelector: {}
+    ## Labels to be added to admission webhooks
+    labels: {}
 
     # Use an existing PSP instead of creating one
     existingPsp: ""
@@ -500,6 +502,8 @@ controller:
       podAnnotations: {}
       nodeSelector: {}
       tolerations: []
+      ## Labels to be added to patch job resources
+      labels: {}
       runAsUser: 2000
 
   metrics:
@@ -722,6 +726,8 @@ defaultBackend:
     type: ClusterIP
 
   priorityClassName: ""
+  ## Labels to be added to the default backend resources
+  labels: {}
 
 ## Enable RBAC as per https://github.com/kubernetes/ingress/tree/master/examples/rbac/nginx and https://github.com/kubernetes/ingress/issues/266
 rbac:

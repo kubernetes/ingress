@@ -6,6 +6,9 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
+    {{- with .Values.controller.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   allowedCapabilities:
     - NET_BIND_SERVICE
