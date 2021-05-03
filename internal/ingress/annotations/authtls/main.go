@@ -40,7 +40,7 @@ const (
 var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 	authOCSPRegex         = regexp.MustCompile(`on|off|leaf`)
-	authOCSPCacheRegex    = regexp.MustCompile(`^shared:[^\:]+:[^\:]+`)
+	authOCSPCacheRegex    = regexp.MustCompile(`off|shared:[^\:]+:[^\:]+`)
 	httpOnlyRegex         = regexp.MustCompile(`^http?://`)
 )
 

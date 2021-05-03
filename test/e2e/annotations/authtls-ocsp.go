@@ -76,10 +76,12 @@ var _ = framework.DescribeAnnotation("auth-tls-ocsp", func() {
 		}
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
-		assertOCSPClientCertificateConfig(f, host)
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "ssl_ocsp on;")
+			})
 
-		ginkgo.By("waiting for ocsp endpoint to be ready")
-		err = framework.WaitForEndpoints(f.KubeClientSet, 1*time.Minute, "ocspserve", f.Namespace, 1)
+		err = framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "ocspserve", f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 
 		f.HTTPTestClient().
@@ -125,9 +127,12 @@ var _ = framework.DescribeAnnotation("auth-tls-ocsp", func() {
 		}
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
-		assertOCSPClientCertificateConfig(f, host)
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "ssl_ocsp on;")
+			})
 
-		err = framework.WaitForEndpoints(f.KubeClientSet, 1*time.Minute, "ocspserve", f.Namespace, 1)
+		err = framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "ocspserve", f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 
 		f.HTTPTestClient().
@@ -165,18 +170,23 @@ var _ = framework.DescribeAnnotation("auth-tls-ocsp", func() {
 		err = o.EnsureOCSPResponderDeployment(nameSpace, "responder")
 		assert.NoError(ginkgo.GinkgoT(), err)
 
+		responder := fmt.Sprintf("http://responder.%v.svc.cluster.local", f.Namespace)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-tls-secret":         nameSpace + "/" + host,
 			"nginx.ingress.kubernetes.io/auth-tls-verify-client":  "on",
 			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":   "2",
 			"nginx.ingress.kubernetes.io/auth-tls-ocsp":           "on",
-			"nginx.ingress.kubernetes.io/auth-tls-ocsp-responder": fmt.Sprintf("http://responder.%v.svc.cluster.local", f.Namespace),
+			"nginx.ingress.kubernetes.io/auth-tls-ocsp-responder": responder,
 		}
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
-		assertOCSPClientCertificateConfig(f, host)
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "ssl_ocsp on;") &&
+					strings.Contains(server, fmt.Sprintf("ssl_ocsp_responder %v;", responder))
+			})
 
-		err = framework.WaitForEndpoints(f.KubeClientSet, 1*time.Minute, "responder", f.Namespace, 1)
+		err = framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "responder", f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 
 		f.HTTPTestClient().
@@ -218,9 +228,13 @@ var _ = framework.DescribeAnnotation("auth-tls-ocsp", func() {
 		}
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
 
-		assertOCSPClientCertificateConfig(f, host)
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "ssl_ocsp on;") &&
+					strings.Contains(server, "ssl_ocsp_cache shared:foo:15m;")
+			})
 
-		err = framework.WaitForEndpoints(f.KubeClientSet, 1*time.Minute, "ocspserve", f.Namespace, 1)
+		err = framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "ocspserve", f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 
 		f.HTTPTestClient().
@@ -249,19 +263,6 @@ var _ = framework.DescribeAnnotation("auth-tls-ocsp", func() {
 			Status(http.StatusOK)
 	})
 })
-
-func assertOCSPClientCertificateConfig(f *framework.Framework, host string) {
-	sslClientCertDirective := fmt.Sprintf("ssl_client_certificate /etc/ingress-controller/ssl/%s-%s.pem;", f.Namespace, host)
-	sslVerify := "ssl_verify_client on;"
-	ocsp := "ocsp on;"
-
-	f.WaitForNginxServer(host,
-		func(server string) bool {
-			return strings.Contains(server, sslClientCertDirective) &&
-				strings.Contains(server, sslVerify) &&
-				strings.Contains(server, ocsp)
-		})
-}
 
 func OCSPResponderLogs(f *framework.Framework) (string, error) {
 	var pod *core.Pod

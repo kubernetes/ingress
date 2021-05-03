@@ -9,7 +9,7 @@ image:
 	cp -R $(DIR)/../../charts .
 
 	# TODO: avoid manual copy
-	cp -R $(DIR)/../../test/e2e/settings/ocsp/* .
+	cp -R $(DIR)/../../test/e2e/framework/ocsp/* .
 
 	docker build \
 		--tag nginx-ingress-controller:e2e .

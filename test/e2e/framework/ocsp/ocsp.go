@@ -78,6 +78,8 @@ const (
 	`
 )
 
+type retryable func() ([]byte, error)
+
 // OCSP Framework support common setup operations for OCSP and OSCP Responsder
 type OcspFramework struct {
 	framework *framework.Framework
@@ -159,7 +161,7 @@ func (o *OcspFramework) prepareCertificates(namespace string) error {
 
 	for _, command := range commands {
 		ginkgo.By(fmt.Sprintf("running %v", command))
-		out, err := exec.Command("bash", "-c", command).CombinedOutput()
+		out, err := withRetry(exec.Command("bash", "-c", command).CombinedOutput, 2)
 		if err != nil {
 			framework.Logf("Command error: %v\n%v\n%v", command, err, string(out))
 			return err
@@ -190,7 +192,7 @@ func (o *OcspFramework) OcspSignCertificates(valid bool, certs ...string) error 
 		}
 		command := fmt.Sprintf(signCommand, cert)
 		ginkgo.By(fmt.Sprintf("running %v", command))
-		out, err := exec.Command("bash", "-c", command).CombinedOutput()
+		out, err := withRetry(exec.Command("bash", "-c", command).CombinedOutput, 2)
 		if err != nil {
 			framework.Logf("Command error: %v\n%v\n%v", command, err, string(out))
 			return err
@@ -198,6 +200,20 @@ func (o *OcspFramework) OcspSignCertificates(valid bool, certs ...string) error 
 	}
 
 	return nil
+}
+
+func withRetry(command retryable, tries int) ([]byte, error) {
+	var err error
+	var out []byte
+	for i := 0; i < tries; i++ {
+		out, err = command()
+		if err == nil {
+			break
+		} else {
+			err = nil
+		}
+	}
+	return out, err
 }
 
 // TlsConfig returns a TLS Configurations suitable for client certificate HTTP Clients
