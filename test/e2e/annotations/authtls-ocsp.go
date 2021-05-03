@@ -194,6 +194,60 @@ var _ = framework.DescribeAnnotation("auth-tls-ocsp", func() {
 			Status(http.StatusOK)
 	})
 
+	ginkgo.It("Should set auth-tls-ocsp, auth-tls-ocsp-cache", func() {
+		host := "authtls.foo.com"
+		nameSpace := f.Namespace
+
+		err := o.CreateIngressOcspSecret(
+			host,
+			host,
+			nameSpace)
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		clientConfig, err := o.TlsConfig(host)
+		assert.NoError(ginkgo.GinkgoT(), err)
+
+		err = o.EnsureOCSPResponderDeployment(nameSpace, "ocspserve")
+		assert.NoError(ginkgo.GinkgoT(), err)
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
+			"nginx.ingress.kubernetes.io/auth-tls-ocsp":          "on",
+			"nginx.ingress.kubernetes.io/auth-tls-ocsp-cache":    "shared:foo:15m",
+		}
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+
+		assertOCSPClientCertificateConfig(f, host)
+
+		err = framework.WaitForEndpoints(f.KubeClientSet, 1*time.Minute, "ocspserve", f.Namespace, 1)
+		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusBadRequest)
+
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		// We should be able to delete the ocsp responder, because we have a cache set.
+		err = f.DeleteDeployment("ocspserve")
+		assert.NoError(ginkgo.GinkgoT(), err)
+
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+	})
 })
 
 func assertOCSPClientCertificateConfig(f *framework.Framework, host string) {

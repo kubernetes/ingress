@@ -913,6 +913,9 @@ stream {
         {{ if not (empty $server.CertificateAuth.OCSPResponder)}}
         ssl_ocsp_responder                      {{ $server.CertificateAuth.OCSPResponder }};
         {{ end }}
+        {{ if not (empty $server.CertificateAuth.OCSPCache)}}
+        ssl_ocsp_cache                          {{ $server.CertificateAuth.OCSPCache }};
+        {{ end }}
 
         {{ if not (empty $server.CertificateAuth.CRLFileName) }}
         # PEM sha: {{ $server.CertificateAuth.CRLSHA }}

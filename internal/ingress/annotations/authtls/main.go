@@ -34,11 +34,13 @@ const (
 	defaultAuthTLSDepth     = 1
 	defaultAuthVerifyClient = "on"
 	defaultOCSP             = "off"
+	defaultOCSPCache        = "off"
 )
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 	authOCSPRegex         = regexp.MustCompile(`on|off|leaf`)
+	authOCSPCacheRegex    = regexp.MustCompile(`^shared:[^\:]+:[^\:]+`)
 	httpOnlyRegex         = regexp.MustCompile(`^http?://`)
 )
 
@@ -52,6 +54,7 @@ type Config struct {
 	PassCertToUpstream bool   `json:"passCertToUpstream"`
 	OCSP               string `json:"ocsp"`
 	OCSPResponder      string `json:"ocspResponser"`
+	OCSPCache          string `json:"ocspCache"`
 	AuthTLSError       string
 }
 
@@ -82,6 +85,9 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 		return false
 	}
 	if assl1.OCSPResponder != assl2.OCSPResponder {
+		return false
+	}
+	if assl1.OCSPCache != assl2.OCSPCache {
 		return false
 	}
 
@@ -153,6 +159,11 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.OCSPResponder, err = parser.GetStringAnnotation("auth-tls-ocsp-responder", ing)
 	if err != nil || !httpOnlyRegex.MatchString(config.OCSPResponder) {
 		config.OCSPResponder = ""
+	}
+
+	config.OCSPCache, err = parser.GetStringAnnotation("auth-tls-ocsp-cache", ing)
+	if err != nil || !authOCSPCacheRegex.MatchString(config.OCSPCache) {
+		config.OCSPCache = defaultOCSPCache
 	}
 
 	return config, nil
