@@ -79,6 +79,8 @@ type SocketCollector struct {
 	hosts sets.String
 
 	metricsPerHost bool
+
+	buckets []float64
 }
 
 var (
@@ -98,9 +100,11 @@ var (
 // updating the library to latest version changed the output of the metrics
 var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
+//var defBuckets = []float64{0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.5, 2.0, 10.0}
+
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost bool, buckets []float64) (*SocketCollector, error) {
 	socket := "/tmp/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	_ = syscall.Unlink(socket)
@@ -137,6 +141,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "The time spent on receiving the response from the upstream server",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Buckets:     buckets,
 			},
 			requestTags,
 		),
@@ -146,6 +151,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "The response length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Buckets:     buckets,
 			},
 			requestTags,
 		),
@@ -156,15 +162,17 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost bool) (*Soc
 				Help:        "The request processing time in milliseconds",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
+				Buckets:     buckets,
 			},
 			requestTags,
 		),
 		requestLength: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:        "request_size",
-				Help:        "The request length (including request line, header, and request body)",
-				Namespace:   PrometheusNamespace,
-				Buckets:     prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
+				Name:      "request_size",
+				Help:      "The request length (including request line, header, and request body)",
+				Namespace: PrometheusNamespace,
+				//Buckets:     prometheus.LinearBuckets(10, 10, 10), // 10 buckets, each 10 bytes wide.
+				Buckets:     buckets,
 				ConstLabels: constLabels,
 			},
 			requestTags,
