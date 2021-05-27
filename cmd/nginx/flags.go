@@ -20,9 +20,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/spf13/pflag"
 	"os"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
