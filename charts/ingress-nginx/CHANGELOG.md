@@ -7,6 +7,10 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 - [#7092](https://github.com/kubernetes/ingress-nginx/pull/7092) Removes the possibility of using localhost in ExternalNames as endpoints
 
 
+### 3.30.0
+
+- Added the possibility to configure `hostIP` on ports exposed by NGINX.
+
 ### 3.29.0
 
 - [X] [#6945](https://github.com/kubernetes/ingress-nginx/pull/7020) Add option to specify job label for ServiceMonitor

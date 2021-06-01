@@ -71,6 +71,10 @@ controller:
     ports:
       http: 80
       https: 443
+    # Set this option to set the hostIP on expozed ports
+    ips:
+      http: ""
+      https: ""
 
   ## Election ID to use for status update
   ##

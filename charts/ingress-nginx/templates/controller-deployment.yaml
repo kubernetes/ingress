@@ -152,6 +152,9 @@ spec:
               protocol: TCP
               {{- if $.Values.controller.hostPort.enabled }}
               hostPort: {{ index $.Values.controller.hostPort.ports $key | default $value }}
+              {{- with (index $.Values.controller.hostPort.ips $key) }}
+              hostIP: {{ . }}
+              {{- end }}
               {{- end }}
           {{- end }}
           {{- if .Values.controller.metrics.enabled }}
@@ -170,6 +173,9 @@ spec:
               protocol: TCP
               {{- if $.Values.controller.hostPort.enabled }}
               hostPort: {{ $key }}
+              {{- with (index $.Values.controller.hostPort.ips $key) }}
+              hostIP: {{ . }}
+              {{- end }}
               {{- end }}
           {{- end }}
           {{- range $key, $value := .Values.udp }}
