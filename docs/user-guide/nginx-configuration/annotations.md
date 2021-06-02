@@ -242,21 +242,18 @@ Client Certificate Authentication is applied per host and it is not possible to 
 
 The annotations are:
 
-* `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`:
-  The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
-  This annotation expects the Secret name in the form "namespace/secretName".
-* `nginx.ingress.kubernetes.io/auth-tls-verify-depth`:
-  The validation depth between the provided client certificate and the Certification Authority chain.
-* `nginx.ingress.kubernetes.io/auth-tls-verify-client`:
-  Enables verification of client certificates. Possible values are:
-  * `off`: Don't request client certificates and don't do client certificate verification. (default)
-  * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`. Failed certificate verification will result in a status code 400 (Bad Request).
-  * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
-  * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
-* `nginx.ingress.kubernetes.io/auth-tls-error-page`:
-  The URL/Page that user should be redirected in case of a Certificate Authentication Error
-* `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`:
-  Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
+* `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`: The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
+
+    This annotation expects the Secret name in the form "namespace/secretName".
+
+* `nginx.ingress.kubernetes.io/auth-tls-verify-depth`: The validation depth between the provided client certificate and the Certification Authority chain.
+* `nginx.ingress.kubernetes.io/auth-tls-verify-client`: Enables verification of client certificates. Possible values are:
+    * `off`: Don't request client certificates and don't do client certificate verification. (default)
+    * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`. Failed certificate verification will result in a status code 400 (Bad Request).
+    * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
+    * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
+* `nginx.ingress.kubernetes.io/auth-tls-error-page`: The URL/Page that user should be redirected in case of a Certificate Authentication Error
+* `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`: Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
 
 The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
 
