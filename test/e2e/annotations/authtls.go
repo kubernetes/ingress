@@ -17,7 +17,6 @@ limitations under the License.
 package annotations
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strings"
@@ -54,7 +53,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		assertSslClientCertificateConfig(f, host, "on", "1")
 
 		// Send Request without Client Certs
-		f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
+		f.HTTPTestClient().
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
 			WithHeader("Host", host).
