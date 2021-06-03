@@ -326,39 +326,43 @@ location enabling this functionality.
 
 CORS can be controlled with the following annotations:
 
-* `nginx.ingress.kubernetes.io/cors-allow-methods`
-  controls which methods are accepted. This is a multi-valued field, separated by ',' and
-  accepts only letters (upper and lower case).
-  - Default: `GET, PUT, POST, DELETE, PATCH, OPTIONS`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
+* `nginx.ingress.kubernetes.io/cors-allow-methods`: Controls which methods are accepted.
 
-* `nginx.ingress.kubernetes.io/cors-allow-headers`
-  controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters,
-  numbers, _ and -.
-  - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+    This is a multi-valued field, separated by ',' and accepts only letters (upper and lower case).
 
-* `nginx.ingress.kubernetes.io/cors-expose-headers`
-  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
-  letters, numbers, _, - and *.
-  - Default: *empty*
-  - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
+    - Default: `GET, PUT, POST, DELETE, PATCH, OPTIONS`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
 
-* `nginx.ingress.kubernetes.io/cors-allow-origin`
-  controls what's the accepted Origin for CORS.
-  This is a single field value, with the following format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
-  - Default: `*`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
+* `nginx.ingress.kubernetes.io/cors-allow-headers`: Controls which headers are accepted.
 
-* `nginx.ingress.kubernetes.io/cors-allow-credentials`
-  controls if credentials can be passed during CORS operations.
-  - Default: `true`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-credentials: "false"`
+    This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
 
-* `nginx.ingress.kubernetes.io/cors-max-age`
-  controls how long preflight requests can be cached.
-  Default: `1728000`
-  Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
+    - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+
+* `nginx.ingress.kubernetes.io/cors-expose-headers`: Controls which headers are exposed to response.
+
+    This is a multi-valued field, separated by ',' and accepts letters, numbers, _, - and *.
+
+    - Default: *empty*
+    - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
+
+* `nginx.ingress.kubernetes.io/cors-allow-origin`: Controls what's the accepted Origin for CORS.
+
+    This is a single field value, with the following format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
+
+    - Default: `*`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
+
+* `nginx.ingress.kubernetes.io/cors-allow-credentials`: Controls if credentials can be passed during CORS operations.
+
+    - Default: `true`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-credentials: "false"`
+
+* `nginx.ingress.kubernetes.io/cors-max-age`: Controls how long preflight requests can be cached.
+
+    - Default: `1728000`
+    - Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
 
 !!! note
     For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html)
