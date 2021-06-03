@@ -33,7 +33,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	ginkgo.It("should set valid auth-tls-secret", func() {
+	ginkgo.It("should set sslClientCertificate, sslVerifyClient and sslVerifyDepth with auth-tls-secret", func() {
 		host := "authtls.foo.com"
 		nameSpace := f.Namespace
 
@@ -44,11 +44,23 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			nameSpace)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		annotations := map[string]string{
+		annotations := map[string]string{}
+
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, "ssl_client_certificate") &&
+					!strings.Contains(server, "ssl_verify_client") &&
+					!strings.Contains(server, "ssl_verify_depth")
+			})
+
+		annotations = map[string]string{
 			"nginx.ingress.kubernetes.io/auth-tls-secret": nameSpace + "/" + host,
 		}
 
-		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+		ing.SetAnnotations(annotations)
+		f.UpdateIngress(ing)
 
 		assertSslClientCertificateConfig(f, host, "on", "1")
 
