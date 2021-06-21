@@ -449,9 +449,15 @@ controller:
 
     ## Enables an additional internal load balancer (besides the external one).
     ## Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
+    ## By default internal load balancer is configured like the external one. You can choose to disable
+    ## parts with enableHttp, enableHttps, enableUdp, enableTcp
     internal:
       enabled: false
       annotations: {}
+      # enableHttp: false
+      # enableHttps: false
+      # enableUdp: false
+      # enableTcp: false
 
       # loadBalancerIP: ""
 

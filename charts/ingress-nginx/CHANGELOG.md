@@ -2,6 +2,11 @@
 
 This file documents all notable changes to [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Helm Chart. The release numbering uses [semantic versioning](http://semver.org).
 
+### 3.34.0
+
+- Rebase controller-service-internal features on controller-service
+- Add capability to disable ports in controller-service-internal
+
 ### 3.32.0
 
 - [7117] https://github.com/kubernetes/ingress-nginx/pull/7117 Add annotations for HPA
