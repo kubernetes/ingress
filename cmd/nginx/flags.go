@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -38,7 +39,8 @@ import (
 
 func parseFlags() (bool, *controller.Configuration, error) {
 	var (
-		flags = pflag.NewFlagSet("", pflag.ExitOnError)
+		metricBuckets []float64
+		flags         = pflag.NewFlagSet("", pflag.ExitOnError)
 
 		apiserverHost = flags.String("apiserver-host", "",
 			`Address of the Kubernetes API server.
@@ -145,6 +147,7 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host`)
+		metricsBucketStr    = flags.String("metrics-buckets", "[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5, 10]", "Set of buckets which will be used for prometheus histogram metrics")
 		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
@@ -261,6 +264,11 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
+	err := json.Unmarshal([]byte(*metricsBucketStr), &metricBuckets)
+	if err != nil {
+		return false, nil, fmt.Errorf("cannot parse %v Please check flag --metrics-buckets - should be JSON array", *metricsBucketStr)
+	}
+
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
 
 	config := &controller.Configuration{
@@ -271,6 +279,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableProfiling:        *profiling,
 		EnableMetrics:          *enableMetrics,
 		MetricsPerHost:         *metricsPerHost,
+		MetricsBuckets:         metricBuckets,
 		MonitorMaxBatchSize:    *monitorMaxBatchSize,
 		EnableSSLPassthrough:   *enableSSLPassthrough,
 		ResyncPeriod:           *resyncPeriod,

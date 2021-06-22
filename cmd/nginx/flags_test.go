@@ -105,3 +105,16 @@ func TestMaxmindMirror(t *testing.T) {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
 }
+
+func TestMetricBuckets(t *testing.T) {
+	resetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--metrics-buckets", "1234567"}
+
+	_, _, err := parseFlags()
+	if err == nil {
+		t.Fatalf("Expected an error parsing flags but none returned")
+	}
+}
