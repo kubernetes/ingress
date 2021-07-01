@@ -41,6 +41,15 @@ add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deploy
 The default certificate will also be used for ingress `tls:` sections that do not
 have a `secretName` option.
 
+You may want your default Nginx server to not expose your
+default-ssl-certificate to all requests.  You want any Ingress without a
+`secretName` (or invalid `secretName`) to use the `default-ssl-certificate`,
+but not serve that up to requests without a matching Server Name Indication.
+For this situation, add `--default-server-uses-fake-certificate`. This will
+keep the hostnames of your default certificate hidden to bots or attackers that
+only know your IP address.
+
+
 ## SSL Passthrough
 
 The [`--enable-ssl-passthrough`](cli-arguments.md) flag enables the SSL Passthrough feature, which is disabled by

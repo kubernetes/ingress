@@ -98,6 +98,9 @@ namespaces are watched if this parameter is left empty.`)
 			`Secret containing a SSL certificate to be used by the default HTTPS server (catch-all).
 Takes the form "namespace/name".`)
 
+		defServerUseFake = flags.Bool("default-server-uses-fake-certificate", false,
+			`If set, the default server will use the fake certificate instead of the default SSL certificate.`)
+
 		defHealthzURL = flags.String("health-check-path", "/healthz",
 			`URL path of the health check endpoint.
 Configured inside the NGINX status server. All requests received on the port
@@ -264,28 +267,29 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	ngx_config.EnableSSLChainCompletion = *enableSSLChainCompletion
 
 	config := &controller.Configuration{
-		APIServerHost:          *apiserverHost,
-		KubeConfigFile:         *kubeConfigFile,
-		UpdateStatus:           *updateStatus,
-		ElectionID:             *electionID,
-		EnableProfiling:        *profiling,
-		EnableMetrics:          *enableMetrics,
-		MetricsPerHost:         *metricsPerHost,
-		MonitorMaxBatchSize:    *monitorMaxBatchSize,
-		EnableSSLPassthrough:   *enableSSLPassthrough,
-		ResyncPeriod:           *resyncPeriod,
-		DefaultService:         *defaultSvc,
-		Namespace:              *watchNamespace,
-		ConfigMapName:          *configMap,
-		TCPConfigMapName:       *tcpConfigMapName,
-		UDPConfigMapName:       *udpConfigMapName,
-		DefaultSSLCertificate:  *defSSLCertificate,
-		PublishService:         *publishSvc,
-		PublishStatusAddress:   *publishStatusAddress,
-		UpdateStatusOnShutdown: *updateStatusOnShutdown,
-		ShutdownGracePeriod:    *shutdownGracePeriod,
-		UseNodeInternalIP:      *useNodeInternalIP,
-		SyncRateLimit:          *syncRateLimit,
+		APIServerHost:            *apiserverHost,
+		KubeConfigFile:           *kubeConfigFile,
+		UpdateStatus:             *updateStatus,
+		ElectionID:               *electionID,
+		EnableProfiling:          *profiling,
+		EnableMetrics:            *enableMetrics,
+		MetricsPerHost:           *metricsPerHost,
+		MonitorMaxBatchSize:      *monitorMaxBatchSize,
+		EnableSSLPassthrough:     *enableSSLPassthrough,
+		ResyncPeriod:             *resyncPeriod,
+		DefaultService:           *defaultSvc,
+		Namespace:                *watchNamespace,
+		ConfigMapName:            *configMap,
+		TCPConfigMapName:         *tcpConfigMapName,
+		UDPConfigMapName:         *udpConfigMapName,
+		DefaultSSLCertificate:    *defSSLCertificate,
+		DefaultServerUseFakeCert: *defServerUseFake,
+		PublishService:           *publishSvc,
+		PublishStatusAddress:     *publishStatusAddress,
+		UpdateStatusOnShutdown:   *updateStatusOnShutdown,
+		ShutdownGracePeriod:      *shutdownGracePeriod,
+		UseNodeInternalIP:        *useNodeInternalIP,
+		SyncRateLimit:            *syncRateLimit,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

@@ -15,6 +15,7 @@ They are set in the container spec of the `nginx-ingress-controller` Deployment 
 | `--default-backend-service`        | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
+| `--default-server-uses-fake-certificate`        | The default Nginx server will serve the fake certificate instead of what is specified in `--default-ssl-certificate`|
 | `--disable-catch-all`              | Disable support for catch-all Ingresses |
 | `--election-id`                    | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
 | `--enable-metrics`                 | Enables the collection of NGINX metrics (default true) |

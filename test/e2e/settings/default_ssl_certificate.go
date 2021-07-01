@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo"
@@ -95,5 +96,55 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 
 		ginkgo.By("making sure the configured default ssl certificate is being used")
 		framework.WaitForTLS(f.GetURL(framework.HTTPS), tlsConfig)
+	})
+
+	ginkgo.It("Default server uses fake certificate when default-server-uses-fake-certificate is enabled", func() {
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--default-server-uses-fake-certificate")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
+
+		host := "foo"
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, service, port, nil))
+		_, err = framework.CreateIngressTLSSecret(f.KubeClientSet,
+			[]string{"not.foo"},
+			ing.Spec.TLS[0].SecretName,
+			ing.Namespace)
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		ginkgo.By("making sure new ingress is deployed")
+		expectedConfig := fmt.Sprintf(`set $proxy_upstream_name "%v-%v-%v";`, f.Namespace, service, port)
+		f.WaitForNginxServer(host, func(cfg string) bool {
+			return strings.Contains(cfg, expectedConfig)
+		})
+
+		ginkgo.By("making sure the default ssl certificate is being used when accessing ingress")
+		tlsConfig.ServerName = host
+		f.HTTPTestClientWithTLSConfig(tlsConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Raw()
+
+		ginkgo.By("making sure the fake ssl certificate is being used when accessing bare server")
+		resp := f.HTTPTestClientWithTLSConfig(&tls.Config{InsecureSkipVerify: true}).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			Expect().
+			Status(http.StatusNotFound).
+			Raw()
+
+		// check the returned secret is the fake one
+		cert := resp.TLS.PeerCertificates[0]
+		assert.Equal(ginkgo.GinkgoT(), cert.DNSNames[0], "ingress.local")
+		assert.Equal(ginkgo.GinkgoT(), cert.Subject.Organization[0], "Acme Co")
+		assert.Equal(ginkgo.GinkgoT(), cert.Subject.CommonName, "Kubernetes Ingress Controller Fake Certificate")
 	})
 })

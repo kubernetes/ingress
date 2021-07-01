@@ -72,7 +72,8 @@ type Configuration struct {
 	// +optional
 	UDPConfigMapName string
 
-	DefaultSSLCertificate string
+	DefaultSSLCertificate    string
+	DefaultServerUseFakeCert bool
 
 	// +optional
 	PublishService       string
@@ -1045,9 +1046,13 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 	// initialize default server and root location
 	pathTypePrefix := networking.PathTypePrefix
+	defaultServerCert := n.getDefaultSSLCertificate()
+	if n.cfg.DefaultServerUseFakeCert {
+		defaultServerCert = n.cfg.FakeCertificate
+	}
 	servers[defServerName] = &ingress.Server{
 		Hostname: defServerName,
-		SSLCert:  n.getDefaultSSLCertificate(),
+		SSLCert:  defaultServerCert,
 		Locations: []*ingress.Location{
 			{
 				Path:         rootLocation,
