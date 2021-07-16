@@ -25,6 +25,9 @@ controller:
   # Use an existing PSP instead of creating one
   existingPsp: ""
 
+  # Use an existing SCC instead of creating one
+  existingScc: ""
+
   # Configures the controller container name
   containerName: controller
 
@@ -517,6 +520,9 @@ controller:
     # Use an existing PSP instead of creating one
     existingPsp: ""
 
+    # Use an existing SCC instead of creating one
+    existingScc: ""
+
     service:
       annotations: {}
       # clusterIP: ""
@@ -666,6 +672,9 @@ defaultBackend:
   # Use an existing PSP instead of creating one
   existingPsp: ""
 
+  # Use an existing SCC instead of creating one
+  existingScc: ""
+  
   extraArgs: {}
 
   serviceAccount:
@@ -779,6 +788,11 @@ rbac:
 # https://kubernetes.io/docs/concepts/policy/pod-security-policy/
 podSecurityPolicy:
   enabled: false
+
+# If true, create & use SecurityContextConstraints resources
+# https://docs.openshift.com/container-platform/4.7/authentication/managing-security-context-constraints.html
+securityContextConstraints:
+  enabled: false 
 
 serviceAccount:
   create: true

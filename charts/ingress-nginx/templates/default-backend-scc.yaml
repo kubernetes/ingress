@@ -1,0 +1,39 @@
+{{- if and .Values.securityContextConstraints.enabled .Values.defaultBackend.enabled (empty .Values.defaultBackend.existingScc) -}}
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ include "ingress-nginx.fullname" . }}-backend
+  labels:
+    {{- include "ingress-nginx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: default-backend
+
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities:
+- NET_BIND_SERVICE 
+requiredDropCapabilities:
+- ALL
+fsGroup:
+  type: MustRunAs
+
+priority: null
+readOnlyRootFilesystem: false
+runAsUser:
+  type: MustRunAsNonRoot
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+
+volumes:
+- configMap
+- emptyDir
+- projected
+- secret
+- downwardAPI
+{{- end }}

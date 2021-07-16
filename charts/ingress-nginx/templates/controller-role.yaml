@@ -89,4 +89,14 @@ rules:
     resourceNames:  [{{ include "ingress-nginx.fullname" . }}]
     {{- end }}
 {{- end }}
+{{- if .Values.securityContextConstraints.enabled }}
+  - apiGroups: ['security.openshift.io']
+    resources: ['securitycontextconstraints']
+    verbs:          ['use']
+    {{- with .Values.controller.existingScc }}
+    resourceNames:  [{{ . }}]
+    {{- else }}
+    resourceNames:  [{{ include "ingress-nginx.fullname" . }}]
+    {{- end }}
+{{- end }}
 {{- end }}

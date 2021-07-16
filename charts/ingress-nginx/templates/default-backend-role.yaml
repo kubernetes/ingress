@@ -1,4 +1,4 @@
-{{- if and .Values.rbac.create .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled -}}
+{{- if and .Values.rbac.create (or .Values.podSecurityPolicy.enabled .Values.securityContextConstraints.enabled) .Values.defaultBackend.enabled -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -8,6 +8,7 @@ metadata:
   name: {{ include "ingress-nginx.fullname" . }}-backend
   namespace: {{ .Release.Namespace }}
 rules:
+{{- if .Values.securityContextConstraints.enabled }}
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
@@ -16,4 +17,15 @@ rules:
     {{- else }}
     resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
     {{- end }}
+{{- end }}
+{{- if .Values.securityContextConstraints.enabled }}
+  - apiGroups: ['security.openshift.io']
+    resources: ['securitycontextconstraints']
+    verbs:          ['use']
+    {{- with .Values.defaultBackend.existingScc }}
+    resourceNames:  [{{ . }}]
+    {{- else }}
+    resourceNames:  [{{ include "ingress-nginx.fullname" . }}-backend]
+    {{- end }}
+{{- end }}
 {{- end }}
