@@ -46,7 +46,7 @@ push: build
 ensure-buildx:
 # this is required for cloudbuild
 ifeq ("$(wildcard $(INIT_BUILDX))","")
-	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/hack/init-buildx.sh | bash
+	@curl -sSL https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/hack/init-buildx.sh | bash
 else
 	@exec $(INIT_BUILDX)
 endif

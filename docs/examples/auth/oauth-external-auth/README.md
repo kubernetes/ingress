@@ -51,13 +51,13 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addon
 
 ![Register OAuth2 Application](images/register-oauth-app-2.png)
 
-3. Configure oauth2_proxy values in the file [`oauth2-proxy.yaml`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/auth/oauth-external-auth/oauth2-proxy.yaml) with the values:
+3. Configure oauth2_proxy values in the file [`oauth2-proxy.yaml`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/auth/oauth-external-auth/oauth2-proxy.yaml) with the values:
 
 - OAUTH2_PROXY_CLIENT_ID with the github `<Client ID>`
 - OAUTH2_PROXY_CLIENT_SECRET with the github `<Client Secret>`
 - OAUTH2_PROXY_COOKIE_SECRET with value of `python -c 'import os,base64; print(base64.b64encode(os.urandom(16)).decode("ascii"))'`
 
-4. Customize the contents of the file [`dashboard-ingress.yaml`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/auth/oauth-external-auth/dashboard-ingress.yaml):
+4. Customize the contents of the file [`dashboard-ingress.yaml`](https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/auth/oauth-external-auth/dashboard-ingress.yaml):
 
 Replace `__INGRESS_HOST__` with a valid FQDN and `__INGRESS_SECRET__` with a Secret with a valid SSL certificate.
 

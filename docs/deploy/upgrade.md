@@ -50,4 +50,4 @@ helm upgrade --reuse-values ngx-ingress ingress-nginx/ingress-nginx
 
 ### Migrating from stable/nginx-ingress
 
-See detailed steps in the upgrading section of the `ingress-nginx` chart [README](https://github.com/kubernetes/ingress-nginx/blob/master/charts/ingress-nginx/README.md#migrating-from-stablenginx-ingress).
+See detailed steps in the upgrading section of the `ingress-nginx` chart [README](https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/README.md#migrating-from-stablenginx-ingress).

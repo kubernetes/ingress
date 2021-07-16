@@ -1,7 +1,7 @@
 <!--
 -----------------NOTICE------------------------
 This file is referenced in code as
-https://github.com/kubernetes/ingress-nginx/blob/master/docs/kubectl-plugin.md
+https://github.com/kubernetes/ingress-nginx/blob/main/docs/kubectl-plugin.md
 Do not move it without providing redirects.
 -----------------------------------------------
 -->

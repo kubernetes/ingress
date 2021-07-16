@@ -60,7 +60,7 @@ All examples that require a test HTTP Service use the standard http-svc pod,
 which you can deploy as follows
 
 ```console
-$ kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/http-svc.yaml
+$ kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/http-svc.yaml
 service "http-svc" created
 replicationcontroller "http-svc" created
 

@@ -1,7 +1,7 @@
 <!--
 -----------------NOTICE------------------------
 This file is referenced in code as
-https://github.com/kubernetes/ingress-nginx/blob/master/docs/troubleshooting.md
+https://github.com/kubernetes/ingress-nginx/blob/main/docs/troubleshooting.md
 Do not move it without providing redirects.
 -----------------------------------------------
 -->

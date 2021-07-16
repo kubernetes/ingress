@@ -4,7 +4,7 @@ This example aims to demonstrate the use of an Init Container to adjust sysctl d
 
 ```console
 kubectl patch deployment -n ingress-nginx nginx-ingress-controller \
-    --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/customization/sysctl/patch.json)"
+    --patch="$(curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/customization/sysctl/patch.json)"
 ```
 
 **Changes:**

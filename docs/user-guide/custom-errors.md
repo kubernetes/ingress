@@ -27,5 +27,5 @@ An example of such custom backend is available inside the source repository at [
 See also the [Custom errors][example-custom-errors] example.
 
 [cm-custom-http-errors]: ./nginx-configuration/configmap.md#custom-http-errors
-[img-custom-error-pages]: https://github.com/kubernetes/ingress-nginx/tree/master/images/custom-error-pages
+[img-custom-error-pages]: https://github.com/kubernetes/ingress-nginx/tree/main/images/custom-error-pages
 [example-custom-errors]: ../../examples/customization/custom-errors

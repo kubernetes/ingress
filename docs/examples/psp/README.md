@@ -11,7 +11,7 @@ you will need to provide the Deployment with the permissions to create pods.
 
 Before applying any objects, first apply the PSP permissions by running:
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/psp/psp.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/psp/psp.yaml
 ```
 
 Note: PSP permissions must be granted before to the creation of the Deployment and the ReplicaSet.

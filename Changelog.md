@@ -806,7 +806,7 @@ _New Features:_
 - NGINX 1.17.10
 - OpenSSL 1.1.1g - [CVE-2020-1967](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2020-1967)
 - OCSP stapling
-- Helm chart [stable/nginx-ingress](https://github.com/helm/charts/tree/master/stable/nginx-ingress) is now maintained in the [ingress-nginx](https://github.com/kubernetes/ingress-nginx/tree/master/charts/ingress-nginx) repository
+- Helm chart [stable/nginx-ingress](https://github.com/helm/charts/tree/master/stable/nginx-ingress) is now maintained in the [ingress-nginx](https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx) repository
 - Support for custom Maxmind GeoLite2 Databases [flag --maxmind-edition-ids](https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/)
 - New [PathType](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types) and [IngressClass](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class) fields. Requires Kubernetes v1.18 or higher
 - Enable configuration of lua plugins using the configuration configmap
@@ -1658,7 +1658,7 @@ _Documentation:_
 _New Features:_
 
 - NGINX 1.15.9
-- New `canary-by-header-value` [annotation](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#canary).
+- New `canary-by-header-value` [annotation](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#canary).
 - New debug binary to get runtime information from lua [3686](https://github.com/kubernetes/ingress-nginx/pull/3686)
 - Support for Opentracing with Datadog
 - New [kubectl plugin](https://github.com/kubernetes/ingress-nginx/pull/3779) **Alpha**
@@ -2027,7 +2027,7 @@ _Documentation:_
 _New Features:_
 
 - NGINX 1.15.5
-- Support for *regular expressions* in paths https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/ingress-path-matching.md
+- Support for *regular expressions* in paths https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/ingress-path-matching.md
 - Provide possibility to block IPs, User-Agents and Referers globally
 - Remove --default-backend-service requirement. Use the flag only for custom default backends
 - Valgrind and Openresty gdb tools
@@ -2228,7 +2228,7 @@ _Documentation:_
 
 _New Features:_
 
-- [Grafana dashboards](https://github.com/kubernetes/ingress-nginx/tree/master/deploy/grafana/dashboards)
+- [Grafana dashboards](https://github.com/kubernetes/ingress-nginx/tree/main/deploy/grafana/dashboards)
 
 _Changes:_
 
@@ -2550,7 +2550,7 @@ _New Features:_
   - The annotation `nginx.ingress.kubernetes.io/grpc-backend: "true"` enable this feature
   - If the gRPC service requires TLS `nginx.ingress.kubernetes.io/secure-backends: "true"`
 - Configurable load balancing with EWMA
-- Support for [lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf) as alternative to ModSecurity. [Check configuration guide](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/annotations.md#lua-resty-waf)
+- Support for [lua-resty-waf](https://github.com/p0pr0ck5/lua-resty-waf) as alternative to ModSecurity. [Check configuration guide](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/annotations.md#lua-resty-waf)
 - Support for session affinity when dynamic configuration is enabled.
 - Add NoAuthLocations and default it to "/.well-known/acme-challenge"
 
@@ -3587,7 +3587,7 @@ _New Features:_
 - Custom log formats using `log-format-upstream` directive in the configuration configmap.
 - Force redirect to SSL using the annotation `ingress.kubernetes.io/force-ssl-redirect`
 - Prometheus metric for VTS status module (transparent, just enable vts stats)
-- Improved external authentication adding `ingress.kubernetes.io/auth-signin` annotation. Please check this [example](https://github.com/kubernetes/ingress/tree/master/examples/external-auth/nginx)
+- Improved external authentication adding `ingress.kubernetes.io/auth-signin` annotation. Please check this [example](https://github.com/kubernetes/ingress/tree/main/examples/external-auth/nginx)
 
 _Breaking changes:_
 
@@ -3651,9 +3651,9 @@ _Changes:_
 
 _New Features:_
 
-- New configuration flag `proxy-set-headers` to allow set custom headers before send traffic to backends. [Example here](https://github.com/kubernetes/ingress/tree/master/examples/customization/custom-headers/nginx)
+- New configuration flag `proxy-set-headers` to allow set custom headers before send traffic to backends. [Example here](https://github.com/kubernetes/ingress/tree/main/examples/customization/custom-headers/nginx)
 - Disable directive access_log globally using `disable-access-log: "true"` in the configuration ConfigMap.
-- Sticky session per Ingress rule using the annotation `ingress.kubernetes.io/affinity`. [Example here](https://github.com/kubernetes/ingress/tree/master/examples/affinity/cookie/nginx)
+- Sticky session per Ingress rule using the annotation `ingress.kubernetes.io/affinity`. [Example here](https://github.com/kubernetes/ingress/tree/main/examples/affinity/cookie/nginx)
 
 _Changes:_
 

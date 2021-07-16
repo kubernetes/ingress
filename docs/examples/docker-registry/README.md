@@ -7,7 +7,7 @@ This example demonstrates how to deploy a [docker registry](https://github.com/d
 First we deploy the docker registry in the cluster:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/docker-registry/deployment.yaml
 ```
 
 !!! Important
@@ -22,7 +22,7 @@ The next required step is creation of the ingress rules. To do this we have two 
 Download and edit the yaml deployment replacing `registry.<your domain>` with a valid DNS name pointing to the ingress controller:
 
 ```console
-wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-without-tls.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/docker-registry/ingress-without-tls.yaml
 ```
 
 !!! Important
@@ -35,7 +35,7 @@ Please check [deploy a plain http registry](https://docs.docker.com/registry/ins
 Download and edit the yaml deployment replacing `registry.<your domain>` with a valid DNS name pointing to the ingress controller:
 
 ```console
-wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/examples/docker-registry/ingress-with-tls.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/docker-registry/ingress-with-tls.yaml
 ```
 
 Deploy [kube lego](https://github.com/jetstack/kube-lego) use [Let's Encrypt](https://letsencrypt.org/) certificates or edit the ingress rule to use a secret with an existing SSL certificate.
