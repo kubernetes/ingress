@@ -1053,8 +1053,12 @@ const jaegerTmpl = `{
 
 const datadogTmpl = `{
   "service": "{{ .DatadogServiceName }}",
+  {{ if .DatadogCollectorURL }}
+  "agent_url": "{{ .DatadogCollectorURL }}",
+  {{ else }}
   "agent_host": "{{ .DatadogCollectorHost }}",
   "agent_port": {{ .DatadogCollectorPort }},
+  {{ end }}
   "environment": "{{ .DatadogEnvironment }}",
   "operation_name_override": "{{ .DatadogOperationNameOverride }}",
   "sample_rate": {{ .DatadogSampleRate }},
@@ -1075,7 +1079,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 		if err != nil {
 			return err
 		}
-	} else if cfg.DatadogCollectorHost != "" {
+	} else if cfg.DatadogCollectorHost != "" || cfg.DatadogCollectorURL != "" {
 		tmpl, err = template.New("datadog").Parse(datadogTmpl)
 		if err != nil {
 			return err

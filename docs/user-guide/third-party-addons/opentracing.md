@@ -96,6 +96,11 @@ jaeger-tracer-baggage-header-prefix
 # specifies the port to use when uploading traces, Default 8126
 datadog-collector-port
 
+# specifies the url to use for submitting traces. If set, this will be used instead of datadog-collector-host / datadog-collector-port.
+# Must be a valid URL. The Datadog tracer supports HTTP, HTTPS and unix address schemes.
+# Examples: http://agent.datadog.svc.cluster.local:8126, https://agent, unix:///var/run/datadog, /var/run/datadog
+datadog-collector-url
+
 # specifies the service name to use for any traces created, Default: nginx
 datadog-service-name
 

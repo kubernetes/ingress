@@ -1100,7 +1100,7 @@ func buildOpentracing(c interface{}, s interface{}) string {
 
 	buf := bytes.NewBufferString("")
 
-	if cfg.DatadogCollectorHost != "" {
+	if cfg.DatadogCollectorHost != "" || isValidDatadogCollectorURL(cfg.DatadogCollectorURL) {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib64/libdd_opentracing.so /etc/nginx/opentracing.json;")
 	} else if cfg.ZipkinCollectorHost != "" {
 		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
@@ -1487,6 +1487,42 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 	}
 
 	return false
+}
+
+// isValidDatadogCollectorURL determines whether the given string is non empty and an url
+// that the datadog tracer will accept as collector url.
+func isValidDatadogCollectorURL(collectorURL string) bool {
+	if collectorURL == "" {
+		return false
+	}
+
+	_, err := url.ParseRequestURI(collectorURL)
+	if err != nil {
+		klog.Errorf("failed to parse datadog-collector-url: %v", err)
+		return false
+	}
+
+	u, err := url.Parse(collectorURL)
+	if err != nil {
+		klog.Errorf("failed to parse datadog-collector-url: %v", err)
+		return false
+	}
+
+	if u.Scheme != "" && u.Scheme != "unix" && u.Scheme != "http" && u.Scheme != "https" {
+		klog.Errorf("failed to parse datadog-collector-url: unsupported scheme %v", u.Scheme)
+		return false
+	}
+
+	if (u.Scheme == "" || u.Scheme == "unix") && (u.Host != "" || u.Path == "") {
+		klog.Errorf("failed to parse datadog-collector-url: failed to parse as unix path")
+		return false
+	}
+
+	if (u.Scheme == "http" || u.Scheme == "https") && u.Host == "" {
+		klog.Errorf("failed to parse datadog-collector-url: missing hostname")
+		return false
+	}
+	return true
 }
 
 func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {

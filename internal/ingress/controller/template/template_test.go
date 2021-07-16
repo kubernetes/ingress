@@ -1411,6 +1411,73 @@ func TestShouldLoadOpentracingModule(t *testing.T) {
 	}
 }
 
+func TestIsValidDatadogCollectorURL(t *testing.T) {
+
+	// valid URLs
+	expected := true
+	value := "http://agent.datadog.svc.cluster.local:8126"
+	actual := isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "https://agent.datadog.svc.cluster.local"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "/var/run/datadog"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "unix:///var/run/datadog"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	// invalid ones
+	expected = false
+	value = "gopher://should.fail"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = ""
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "unix://foo:bar@should.fail/var/run/datadog"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "unix://"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "}}random/garbage:1234::"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+
+	value = "https:///just/a/path"
+	actual = isValidDatadogCollectorURL(value)
+	if actual != expected {
+		t.Errorf("Expected '%v' but returned '%v' for value '%v'", expected, actual, value)
+	}
+}
+
 func TestModSecurityForLocation(t *testing.T) {
 	loadModule := `modsecurity on;
 `

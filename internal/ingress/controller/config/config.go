@@ -605,6 +605,10 @@ type Configuration struct {
 	// Default: 8126
 	DatadogCollectorPort int `json:"datadog-collector-port"`
 
+	// DatadogCollectorURL specifies the URL of the datadog agent to use when uploading traces.
+	// If set will be used instead of DatadogCollectorHost/DatadogCollectorPort.
+	DatadogCollectorURL string `json:"datadog-collector-url"`
+
 	// DatadogEnvironment specifies the environment this trace belongs to.
 	// Default: prod
 	DatadogEnvironment string `json:"datadog-environment"`

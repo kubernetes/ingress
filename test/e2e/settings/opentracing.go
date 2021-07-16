@@ -39,6 +39,7 @@ const (
 	// jaegerEndpoint      = "jaeger-endpoint"
 
 	datadogCollectorHost = "datadog-collector-host"
+	datadogCollectorURL  = "datadog-collector-url"
 
 	opentracingOperationName         = "opentracing-operation-name"
 	opentracingLocationOperationName = "opentracing-location-operation-name"
@@ -226,6 +227,18 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 		config := map[string]string{}
 		config[enableOpentracing] = "true"
 		config[datadogCollectorHost] = "http://127.0.0.1"
+		f.SetNginxConfigMapData(config)
+
+		framework.Sleep(10 * time.Second)
+		log, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.NotContains(ginkgo.GinkgoT(), log, "Unexpected failure reloading the backend", "reloading nginx after a configmap change")
+	})
+
+	ginkgo.It("should enable opentracing using datadog with an HTTP endpoint", func() {
+		config := map[string]string{}
+		config[enableOpentracing] = "true"
+		config[datadogCollectorURL] = "http://127.0.0.1/datadog/trace"
 		f.SetNginxConfigMapData(config)
 
 		framework.Sleep(10 * time.Second)
