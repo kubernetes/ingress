@@ -2,7 +2,8 @@
 	"CN": "example.com",
 	"hosts": [
 		"example.com",
-		"www.example.com"
+		"www.example.com",
+		"authtls.foo.com"
 	],
 	"key": {
 		"algo": "rsa",

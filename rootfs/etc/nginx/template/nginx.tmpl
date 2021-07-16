@@ -909,6 +909,16 @@ stream {
         ssl_verify_client                       {{ $server.CertificateAuth.VerifyClient }};
         ssl_verify_depth                        {{ $server.CertificateAuth.ValidationDepth }};
 
+        {{ if not (empty $server.CertificateAuth.OCSP)}}
+        ssl_ocsp                                {{ $server.CertificateAuth.OCSP }};
+        {{ end }}
+        {{ if not (empty $server.CertificateAuth.OCSPResponder)}}
+        ssl_ocsp_responder                      {{ $server.CertificateAuth.OCSPResponder }};
+        {{ end }}
+        {{ if not (empty $server.CertificateAuth.OCSPCache)}}
+        ssl_ocsp_cache                          {{ $server.CertificateAuth.OCSPCache }};
+        {{ end }}
+
         {{ if not (empty $server.CertificateAuth.CRLFileName) }}
         # PEM sha: {{ $server.CertificateAuth.CRLSHA }}
         ssl_crl                                 {{ $server.CertificateAuth.CRLFileName }};

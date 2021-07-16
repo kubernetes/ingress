@@ -27,6 +27,9 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/auth-tls-ocsp](#client-certificate-authentication)|"off" or "on" or "leaf"|
+|[nginx.ingress.kubernetes.io/auth-tls-ocsp-responder](#client-certificate-authentication)|string|
+|[nginx.ingress.kubernetes.io/auth-tls-ocsp-cache](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
@@ -257,6 +260,12 @@ The annotations are:
   The URL/Page that user should be redirected in case of a Certificate Authentication Error
 * `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`:
   Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
+* `nginx.ingress.kubernetes.io/auth-tls-ocsp`:
+  Enables OCSP validation of the client certificate chain. The leaf parameter enables validation of the client certificate only. Requires auth-tls-verify-client to be set. Possible values are "off" (default) or "on" or "leaf".
+* `nginx.ingress.kubernetes.io/auth-tls-ocsp-responder`:
+  Overrides the URL of the OCSP responder specified in the “Authority Information Access” certificate extension for validation of client certificates. Only “http://” OCSP responders are supported.
+* `nginx.ingress.kubernetes.io/auth-tls-ocsp-cache`:
+  Sets name and size of the cache as `[shared:name:size]`, which stores client certificates status for OCSP validation. The cache is shared between all worker processes. A cache with the same name can be used in several virtual servers. The `off` parameter prohibits the use of the cache.
 
 The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
 
