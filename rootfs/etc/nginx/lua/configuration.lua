@@ -1,4 +1,5 @@
 local cjson = require("cjson.safe")
+local util = require("util")
 
 local io = io
 local ngx = ngx
@@ -14,12 +15,9 @@ local certificate_servers = ngx.shared.certificate_servers
 local ocsp_response_cache = ngx.shared.ocsp_response_cache
 
 local EMPTY_UID = "-1"
+local BACKEND_BUCKET_SIZE = 10
 
 local _M = {}
-
-function _M.get_backends_data()
-  return configuration_data:get("backends")
-end
 
 function _M.get_general_data()
   return configuration_data:get("general")
@@ -185,11 +183,119 @@ local function handle_certs()
   end
 end
 
+local function get_backends_with_name(name)
+  local backends_data = configuration_data:get(name)
+
+  local backends, err = cjson.decode(backends_data)
+  if not backends_data then
+    ngx.log(ngx.ERR, "could not parse backends data: ", err)
+    return
+  end
+  return backends
+end
+
+local function get_backend_bucket_names()
+  local names = configuration_data:get("backend_bucket_names")
+  if not names then
+    return
+  end
+  local backend_bucket_names, err = cjson.decode(names)
+  if not backend_bucket_names then
+    ngx.log(ngx.ERR, "could not parse backend bucket names data: ", err)
+    return
+  end
+
+  return backend_bucket_names
+end
+
+local function get_backends(is_init_call)
+  local bucket_names = get_backend_bucket_names()
+  if not bucket_names then
+    ngx.log(ngx.WARN, "bucket name not found")
+    return
+  end
+  local all_backends = {}
+  for i, name in ipairs(bucket_names) do
+    local backends = get_backends_with_name(name)
+    for j, v in ipairs(backends) do
+      table.insert(all_backends, v)
+    end
+
+    if not is_init_call then
+      ngx.sleep(0)
+    end
+  end
+
+  return all_backends
+end
+
+local function save_backends(backends)
+  local backend_buckets = {}
+  local backend_bucket_names = {}
+  local backend_bucket_size = BACKEND_BUCKET_SIZE
+  local tmp_backends = {}
+  for i, v in ipairs(backends) do
+    if table.getn(tmp_backends) >= BACKEND_BUCKET_SIZE then
+       local bucket_key = string.format("bucket_%d", backend_bucket_size)
+       local backends = util.deepcopy(tmp_backends)
+       table.insert(backend_bucket_names, bucket_key)
+       table.insert(backend_buckets, backends)
+       tmp_backends = {}
+       backend_bucket_size = backend_bucket_size + BACKEND_BUCKET_SIZE
+    end
+    table.insert(tmp_backends, v)
+  end
+  if table.getn(tmp_backends) > 0 then
+    local bucket_key = string.format("bucket_%d", backend_bucket_size)
+    local backends = util.deepcopy(tmp_backends)
+    table.insert(backend_bucket_names, bucket_key)
+    table.insert(backend_buckets, backends)
+    tmp_backends = {}
+  end
+
+  for i, backends in ipairs(backend_buckets) do
+    local new_backends, err = cjson.encode(backends)
+    if not new_backends then
+      ngx.log(ngx.ERR, "could not parse backends data: ", err)
+      ngx.status = ngx.HTTP_BAD_REQUEST
+      return
+    end
+
+    local backend_bucket_name = backend_bucket_names[i]
+    local success, err = configuration_data:set(backend_bucket_name, new_backends)
+    if not success then
+      ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+      ngx.status = ngx.HTTP_BAD_REQUEST
+      return
+    end
+  end
+
+  local new_backend_names, err = cjson.encode(backend_bucket_names)
+  if not new_backend_names then
+    ngx.log(ngx.ERR, "could not parse backends_names data: ", err)
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+
+  local success, err = configuration_data:set("backend_bucket_names", new_backend_names)
+  if not success then
+    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    return
+  end
+end
 
 local function handle_backends()
   if ngx.var.request_method == "GET" then
+    local backneds = get_backends()
+    local backneds_data, err = cjson.decode(backends)
+    if not backneds_data then
+      ngx.log(ngx.ERR, "could not parse backends data: ", err)
+      ngx.status = ngx.HTTP_BAD_REQUEST
+      return
+    end
     ngx.status = ngx.HTTP_OK
-    ngx.print(_M.get_backends_data())
+    ngx.print(backneds_data)
     return
   end
 
@@ -200,16 +306,17 @@ local function handle_backends()
     return
   end
 
-  local success, err = configuration_data:set("backends", backends)
-  if not success then
-    ngx.log(ngx.ERR, "dynamic-configuration: error updating configuration: " .. tostring(err))
+  local new_backends, err = cjson.decode(backends)
+  if not new_backends then
+    ngx.log(ngx.ERR, "could not parse backends data: ", err)
     ngx.status = ngx.HTTP_BAD_REQUEST
     return
   end
+  save_backends(new_backends)
 
   ngx.update_time()
   local raw_backends_last_synced_at = ngx.time()
-  success, err = configuration_data:set("raw_backends_last_synced_at", raw_backends_last_synced_at)
+  local success, err = configuration_data:set("raw_backends_last_synced_at", raw_backends_last_synced_at)
   if not success then
     ngx.log(ngx.ERR, "dynamic-configuration: error updating when backends sync, " ..
                      "new upstream peers waiting for force syncing: " .. tostring(err))
@@ -249,6 +356,10 @@ function _M.call()
 
   ngx.status = ngx.HTTP_NOT_FOUND
   ngx.print("Not found!")
+end
+
+function _M.get_backends_data(is_init_call)
+  return get_backends(is_init_call)
 end
 
 setmetatable(_M, {__index = { handle_servers = handle_servers }})
