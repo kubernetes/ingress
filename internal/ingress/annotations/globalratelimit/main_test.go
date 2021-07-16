@@ -82,6 +82,7 @@ func TestGlobalRateLimiting(t *testing.T) {
 	annRateLimitWindow := parser.GetAnnotationWithPrefix("global-rate-limit-window")
 	annRateLimitKey := parser.GetAnnotationWithPrefix("global-rate-limit-key")
 	annRateLimitIgnoredCIDRs := parser.GetAnnotationWithPrefix("global-rate-limit-ignored-cidrs")
+	annRateLimitHeaderBased := parser.GetAnnotationWithPrefix("global-rate-limit-header-based")
 
 	testCases := []struct {
 		title          string
@@ -102,11 +103,12 @@ func TestGlobalRateLimiting(t *testing.T) {
 				annRateLimitWindow: "2m",
 			},
 			&Config{
-				Namespace:    expectedUID,
-				Limit:        100,
-				WindowSize:   120,
-				Key:          "$remote_addr",
-				IgnoredCIDRs: make([]string, 0),
+				Namespace:             expectedUID,
+				Limit:                 100,
+				WindowSize:            120,
+				Key:                   "$remote_addr",
+				IgnoredCIDRs:          make([]string, 0),
+				HeaderBasedRateLimits: make([]HeaderBasedRateLimit, 0),
 			},
 			nil,
 		},
@@ -118,11 +120,12 @@ func TestGlobalRateLimiting(t *testing.T) {
 				annRateLimitKey:    "$http_x_api_user",
 			},
 			&Config{
-				Namespace:    expectedUID,
-				Limit:        100,
-				WindowSize:   120,
-				Key:          "$http_x_api_user",
-				IgnoredCIDRs: make([]string, 0),
+				Namespace:             expectedUID,
+				Limit:                 100,
+				WindowSize:            120,
+				Key:                   "$http_x_api_user",
+				IgnoredCIDRs:          make([]string, 0),
+				HeaderBasedRateLimits: make([]HeaderBasedRateLimit, 0),
 			},
 			nil,
 		},
@@ -135,11 +138,35 @@ func TestGlobalRateLimiting(t *testing.T) {
 				annRateLimitIgnoredCIDRs: "127.0.0.1, 200.200.24.0/24",
 			},
 			&Config{
+				Namespace:             expectedUID,
+				Limit:                 100,
+				WindowSize:            120,
+				Key:                   "$http_x_api_user",
+				IgnoredCIDRs:          []string{"127.0.0.1", "200.200.24.0/24"},
+				HeaderBasedRateLimits: make([]HeaderBasedRateLimit, 0),
+			},
+			nil,
+		},
+		{
+			"global-rate-limit-header-based annotation",
+			map[string]string{
+				annRateLimit:            "100",
+				annRateLimitWindow:      "2m",
+				annRateLimitKey:         "$http_x_user_name",
+				annRateLimitHeaderBased: `[{"header-name":"x-user-name","header-values":["foo","bar"],"limit":1,"window-size":60}]`,
+			},
+			&Config{
 				Namespace:    expectedUID,
 				Limit:        100,
 				WindowSize:   120,
-				Key:          "$http_x_api_user",
-				IgnoredCIDRs: []string{"127.0.0.1", "200.200.24.0/24"},
+				Key:          "$http_x_user_name",
+				IgnoredCIDRs: make([]string, 0),
+				HeaderBasedRateLimits: []HeaderBasedRateLimit{{
+					HeaderName:   "x-user-name",
+					HeaderValues: []string{"foo", "bar"},
+					Limit:        1,
+					WindowSize:   60,
+				}},
 			},
 			nil,
 		},

@@ -60,6 +60,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/global-rate-limit-window](#global-rate-limiting)|duration|
 |[nginx.ingress.kubernetes.io/global-rate-limit-key](#global-rate-limiting)|string|
 |[nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs](#global-rate-limiting)|string|
+|[nginx.ingress.kubernetes.io/global-rate-limit-header-based](#global-rate-limiting)|json string|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
@@ -531,10 +532,45 @@ the Global Rate Limiting will count requests to all the paths under the same cou
 Extract a path out into its own ingres if you need to isolate a certain path.
 
 
-* `nginx.ingress.kubernetes.io/global-rate-limit`: Configures maximum allowed number of requests per window. Required.
-* `nginx.ingress.kubernetes.io/global-rate-limit-window`: Configures a time window (i.e `1m`) that the limit is applied. Required.
+* `nginx.ingress.kubernetes.io/global-rate-limit`: Configures maximum allowed number of requests per window. Required if `global-rate-limit-header-based` is absent.
+* `nginx.ingress.kubernetes.io/global-rate-limit-window`: Configures a time window (i.e `1m`) that the limit is applied. Required if `global-rate-limit-header-based` is absent.
 * `nginx.ingress.kubernetes.io/global-rate-limit-key`: Configures a key for counting the samples. Defaults to `$remote_addr`. You can also combine multiple NGINX variables here, like `${remote_addr}-${http_x_api_client}` which would mean the limit will be applied to requests coming from the same API client (indicated by `X-API-Client` HTTP request header) with the same source IP address.
 * `nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs`: comma separated list of IPs and CIDRs to match client IP against. When there's a match request is not considered for rate limiting.
+* `nginx.ingress.kubernetes.io/global-rate-limit-header-based`: stringfied json with list of object for rules to define new values of "limit" and "limit-window" based on header name/value. First rule matched takes precedence.
+
+`global-rate-limit-header-based` object:
+
+|key|type|notes|
+|---|----|-----|
+|header-name|string|Name of the Request Header|
+|header-values|list of strings|**Exactly match** values to Requester Header value|
+|limit|int|Maximum allowed number of requests per window|
+|window-size|int|Configures a time window (**in seconds**) that the limit is applied|
+
+e.g.: Apply rate-liting of 10 requests per minute when request `x-user-role` value is `regular`, and 200 RPM if request `x-user-role` value is in `premium` or `diamond`. Disable rate-limiting when requester header `x-user-email` value is `ceo@my-company.com` no matter which role it has.
+
+```json
+[
+  {
+    "header-name": "x-user-email",
+    "header-values": [ "ceo@my-company.com" ],
+    "limit": 0,
+    "window-size": 0
+  }
+  {
+    "header-name": "x-user-role",
+    "header-values": [ "regular" ],
+    "limit": 10,
+    "window-size": 60
+  },
+  {
+    "header-name": "x-user-role",
+    "header-values": [ "premium", "diamond" ],
+    "limit": 200,
+    "window-size": 60
+  }
+]
+```
 
 ### Permanent Redirect
 

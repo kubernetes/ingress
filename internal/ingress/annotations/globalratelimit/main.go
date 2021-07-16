@@ -17,6 +17,7 @@ limitations under the License.
 package globalratelimit
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -28,17 +29,30 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/sets"
+
+	"github.com/r3labs/diff/v2"
 )
 
 const defaultKey = "$remote_addr"
+const defaultWindowSize = "0s"
+const defaultHeaderBasedRateLimits = "[]"
+
+// HeaderBasedRateLimit be able to set different rate limits based on header/value match
+type HeaderBasedRateLimit struct {
+	HeaderName   string   `json:"header-name"`
+	HeaderValues []string `json:"header-values"`
+	Limit        int      `json:"limit"`
+	WindowSize   int      `json:"window-size"`
+}
 
 // Config encapsulates all global rate limit attributes
 type Config struct {
-	Namespace    string   `json:"namespace"`
-	Limit        int      `json:"limit"`
-	WindowSize   int      `json:"window-size"`
-	Key          string   `json:"key"`
-	IgnoredCIDRs []string `json:"ignored-cidrs"`
+	Namespace             string                 `json:"namespace"`
+	Limit                 int                    `json:"limit"`
+	WindowSize            int                    `json:"window-size"`
+	Key                   string                 `json:"key"`
+	IgnoredCIDRs          []string               `json:"ignored-cidrs"`
+	HeaderBasedRateLimits []HeaderBasedRateLimit `json:"header-based-rate-limits"`
 }
 
 // Equal tests for equality between two Config types
@@ -57,6 +71,20 @@ func (l *Config) Equal(r *Config) bool {
 	}
 	if len(l.IgnoredCIDRs) != len(r.IgnoredCIDRs) || !sets.StringElementsMatch(l.IgnoredCIDRs, r.IgnoredCIDRs) {
 		return false
+	}
+
+	if len(l.HeaderBasedRateLimits) != len(r.HeaderBasedRateLimits) {
+		return false
+	}
+	for i := range l.HeaderBasedRateLimits {
+		change, err := diff.Diff(l.HeaderBasedRateLimits[i], r.HeaderBasedRateLimits[i])
+		// Diff two structs - If err: mark as equal
+		if err != nil {
+			return true
+		}
+		if len(change) > 0 {
+			return false
+		}
 	}
 
 	return true
@@ -78,9 +106,8 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	limit, _ := parser.GetIntAnnotation("global-rate-limit", ing)
 	rawWindowSize, _ := parser.GetStringAnnotation("global-rate-limit-window", ing)
-
-	if limit == 0 || len(rawWindowSize) == 0 {
-		return config, nil
+	if len(rawWindowSize) == 0 {
+		rawWindowSize = defaultWindowSize
 	}
 
 	windowSize, err := time.ParseDuration(rawWindowSize)
@@ -101,11 +128,28 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
+	rawHeaderBasedRateLimits, _ := parser.GetStringAnnotation("global-rate-limit-header-based", ing)
+	if len(rawHeaderBasedRateLimits) == 0 {
+		rawHeaderBasedRateLimits = defaultHeaderBasedRateLimits
+	}
+	var headerBaseRateLimits []HeaderBasedRateLimit
+	err = json.Unmarshal([]byte(rawHeaderBasedRateLimits), &headerBaseRateLimits)
+	if err != nil {
+		return nil, ing_errors.LocationDenied{
+			Reason: errors.Wrap(err, "failed to parse 'global-rate-limit-header-based' json value"),
+		}
+	}
+
+	if limit == 0 && windowSize == 0 && len(headerBaseRateLimits) == 0 {
+		return config, nil
+	}
+
 	config.Namespace = strings.Replace(string(ing.UID), "-", "", -1)
 	config.Limit = limit
 	config.WindowSize = int(windowSize.Seconds())
 	config.Key = key
 	config.IgnoredCIDRs = ignoredCIDRs
+	config.HeaderBasedRateLimits = headerBaseRateLimits
 
 	return config, nil
 }

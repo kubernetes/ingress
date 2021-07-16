@@ -8,6 +8,8 @@ local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
 local ngx_INFO = ngx.INFO
 
+local ipairs = ipairs
+
 local _M = {}
 
 local DECISION_CACHE = ngx.shared.global_throttle_cache
@@ -41,9 +43,39 @@ local function should_ignore_request(ignored_cidrs)
   return is_ignored
 end
 
+local function has_value(tab, val)
+  for _, value in ipairs(tab) do
+    if value == val then
+      return true
+    end
+  end
+  return false
+end
+
+local function parse_header_based_objects(location_config)
+  local request_headers = ngx.req.get_headers()
+  for _,o in ipairs(location_config.header_based) do
+    -- if we have value for header name, and the header is present in the request
+    if ((o['header-name'] ~= "") and (request_headers[o['header-name']])) then
+      -- check if the value matches the alternatives at "header-values"
+      --  if match set limit and window_size and return
+      --
+      -- first match has precedence
+      if has_value(o['header-values'], request_headers[o['header-name']]) then
+        location_config['window_size'] = o['window']
+        location_config['limit'] = o['limit']
+        return
+      end
+    end
+  end
+end
+
 local function is_enabled(config, location_config)
   if config.memcached.host == "" or config.memcached.port == 0 then
     return false
+  end
+  if #location_config.header_based > 0 then
+    parse_header_based_objects(location_config)
   end
   if location_config.limit == 0 or
     location_config.window_size == 0 then

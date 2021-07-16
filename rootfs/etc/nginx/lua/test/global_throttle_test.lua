@@ -89,6 +89,7 @@ describe("global_throttle", function()
     window_size = 60,
     key = {},
     ignored_cidrs = {},
+    header_based = {},
   }
   local CONFIG = {
     memcached = {
@@ -101,7 +102,14 @@ describe("global_throttle", function()
   before_each(function()
     snapshot = assert:snapshot()
 
-    ngx.var = { remote_addr = "127.0.0.1", global_rate_limit_exceeding = nil }
+    ngx.var = { remote_addr = "127.0.0.1", global_rate_limit_exceeding = nil, http_x_client_role = "root" }
+    ngx.req = {
+      get_headers = function() return {
+        ["host"]          = "127.0.0.1",
+        ["user-agent"]    = "lua-resty-http",
+        ["x-client-role"] = "root"
+      } end,
+    }
   end)
 
   after_each(function()
@@ -141,6 +149,17 @@ describe("global_throttle", function()
     local global_throttle = require_without_cache("global_throttle")
     local location_config = util.deepcopy(LOCATION_CONFIG)
     location_config.ignored_cidrs = { ngx.var.remote_addr }
+    assert_short_circuits(function(global_throttle)
+      assert.has_no.errors(function()
+        global_throttle.throttle(CONFIG, location_config)
+      end)
+    end)
+  end)
+
+  it("short circuits when X-Client-Role is 'admin' or 'root' in header_based", function()
+    local global_throttle = require_without_cache("global_throttle")
+    local location_config = util.deepcopy(LOCATION_CONFIG)
+    location_config.header_based = { {["header-name"]="x-client-role", ["header-values"]={"admin", "root"}, ["limit"]=0, ["window_size"]=0} }
     assert_short_circuits(function(global_throttle)
       assert.has_no.errors(function()
         global_throttle.throttle(CONFIG, location_config)
