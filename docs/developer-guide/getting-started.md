@@ -47,7 +47,7 @@ make lua-test
 Lua tests are located in the directory `rootfs/etc/nginx/lua/test`
 
 !!! important
-    Test files must follow the naming convention `<mytest>_test.lua` or it will be ignored
+    Test file must follow the naming convention `<mytest>_test.lua` or it will be ignored
 
 
 **Run e2e test suite**
@@ -82,7 +82,7 @@ export REGISTRY="$USER"
 make build image
 ```
 
-and then publish such version with
+and then publish such version with the following command
 
 ```console
 docker push $REGISTRY/controller:$TAG
