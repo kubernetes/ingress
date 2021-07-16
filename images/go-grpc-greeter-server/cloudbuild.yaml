@@ -1,0 +1,24 @@
+timeout: 1200s
+options:
+  substitution_option: ALLOW_LOOSE
+  # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
+  machineType: N1_HIGHCPU_8
+steps:
+  - name: gcr.io/k8s-testimages/gcb-docker-gcloud:v20210622-762366a
+    entrypoint: bash
+    env:
+      - DOCKER_CLI_EXPERIMENTAL=enabled
+      - TAG=$_GIT_TAG
+      - BASE_REF=$_PULL_BASE_REF
+      - REGISTRY=gcr.io/k8s-staging-ingress-nginx
+      # default cloudbuild has HOME=/builder/home and docker buildx is in /root/.docker/cli-plugins/docker-buildx
+      # set the home to /root explicitly to if using docker buildx
+      - HOME=/root
+    args:
+    - -c
+    - |
+      gcloud auth configure-docker \
+      && make push
+substitutions:
+  _GIT_TAG: "12345"
+  _PULL_BASE_REF: "master"

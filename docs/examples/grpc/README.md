@@ -1,93 +1,152 @@
 # gRPC
 
-This example demonstrates how to route traffic to a gRPC service through the
-nginx controller.
+This example demonstrates how to route traffic to a gRPC service through the nginx controller.
 
 ## Prerequisites
 
 1. You have a kubernetes cluster running.
-2. You have a domain name such as `example.com` that is configured to route
-   traffic to the ingress controller.  Replace references to
-   `fortune-teller.stack.build` (the domain name used in this example) to your
-   own domain name (you're also responsible for provisioning an SSL certificate
-   for the ingress).
-3. You have the nginx-ingress controller installed in typical fashion (must be
-   at least
-   [quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0](https://quay.io/kubernetes-ingress-controller/nginx-ingress-controller)
-   for grpc support.
-4. You have a backend application running a gRPC server and listening for TCP
-   traffic.  If you prefer, you can use the
-   [fortune-teller](https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller)
-   application provided here as an example.
+2. You have a domain name such as `example.com` that is configured to route traffic to the ingress controller.
+3. You have the nginx-ingress controller installed as per docs, with gRPC support.
+4. You have a backend application running a gRPC server and listening for TCP traffic.  If you want, you can use <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> as an example.
+5. You're also responsible for provisioning an SSL certificate for the ingress. So you need to have a valid SSL certificate, deployed as a Kubernetes secret of type tls, in the same namespace as the gRPC application.
 
-### Step 1: kubernetes `Deployment`
+### Step 1: Create a Kubernetes `Deployment` for gRPC app
 
-```sh
-$ kubectl create -f app.yaml
-```
+- Make sure your gRPC application pod is running and listening for connections. For example you can try a kubectl command like this below:
+  ```
+  $ kubectl get po -A -o wide | grep go-grpc-greeter-server
+  ```
+- If you have a gRPC app deployed in your cluster, then skip further notes in this Step 1, and continue from Step 2 below. 
 
-This is a standard kubernetes deployment object.  It is running a grpc service
-listening on port `50051`.
+- As an example gRPC application, we can use this app <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> .
 
-The sample application
-[fortune-teller-app](https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller)
-is a grpc server implemented in go. Here's the stripped-down implementation:
+- To create a container image for this app, you can use [this Dockerfile](../../../images/go-grpc-greeter-server/rootfs/Dockerfile). 
 
-```go
-func main() {
-	grpcServer := grpc.NewServer()
-	fortune.RegisterFortuneTellerServer(grpcServer, &FortuneTeller{})
-	lis, _ := net.Listen("tcp", ":50051")
-	grpcServer.Serve(lis)
-}
-```
+- If you use the Dockerfile mentioned above, to create a image, then given below is an example of a Kubernetes manifest, to create a deployment resource, that uses that image. If needed, then edit this manifest to suit your needs. Assuming the name of this yaml file is  `deployment.go-grpc-greeter-server.yaml` ;
 
-The takeaway is that we are not doing any TLS configuration on the server (as we
-are terminating TLS at the ingress level, grpc traffic will travel unencrypted
-inside the cluster and arrive "insecure").
+  ```
+  cat <<EOF | kubectl apply -f -
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: go-grpc-greeter-server
+    name: go-grpc-greeter-server
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: go-grpc-greeter-server
+    template:
+      metadata:
+        labels:
+          app: go-grpc-greeter-server
+      spec:
+        containers:
+        - image: <reponame>/go-grpc-greeter-server   # Edit this for your reponame
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          name: go-grpc-greeter-server
+          ports:
+          - containerPort: 50051
+  EOF
+  ```
 
-For your own application you may or may not want to do this.  If you prefer to
-forward encrypted traffic to your POD and terminate TLS at the gRPC server
-itself, add the ingress annotation `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`.
+### Step 2: Create the Kubernetes `Service` for the gRPC app
 
-### Step 2: the kubernetes `Service`
+- You can use the following example manifest to create a service of type ClusterIP. Edit the name/namespace/label/port to match your deployment/pod ;
+  ```
+  cat <<EOF | kubectl apply -f -
+  apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: go-grpc-greeter-server
+    name: go-grpc-greeter-server
+  spec:
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 50051
+    selector:
+      app: go-grpc-greeter-server
+    type: ClusterIP
+  EOF
+  ```
+- You can save the above example manifest to a file with name `service.go-grpc-greeter-server.yaml` and edit it to match your deployment/pod, if required. You can create the service resource with a kubectl command like this ;
 
-```sh
-$ kubectl create -f svc.yaml
-```
+  ```
+  $ kubectl create -f service.go-grpc-greeter-server.yaml
+  ```
 
-Here we have a typical service. Nothing special, just routing traffic to the
-backend application on port `50051`.
+### Step 3: Create the Kubernetes `Ingress` resource for the gRPC app
 
-### Step 3: the kubernetes `Ingress`
+- Use the following example manifest of a ingress resource to create a ingress for your grpc app. If required, edit it to match your app's details like name, namespace, service, secret etc. Make sure you have the required SSL-Certificate, existing in your Kubernetes cluster, in the same namespace where the gRPC app is. The certificate must be available as a kubernetes secret resource, of type "kubernete.io/tls" https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets. This is because we are terminating TLS on the ingress;
 
-```sh
-$ kubectl create -f ingress.yaml
-```
+  ```
+  cat <<EOF | kubectl apply -f -
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    name: fortune-ingress
+    namespace: default
+  spec:
+    rules:
+    - host: grpctest.dev.mydomain.com
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: go-grpc-greeter-server
+              port:
+                number: 80
+    tls:
+    # This secret must exist beforehand
+    # The cert must also contain the subj-name grpctest.dev.mydomain.com
+    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+    - secretName: wildcard.dev.mydomain.com
+      hosts:
+        - grpctest.dev.mydomain.com
+  EOF
+  ```
 
-A few things to note:
+- If you save the above example manifest as a file named `ingress.go-grpc-greeter-server.yaml` and edit it to match your deployment and service, you can create the ingress like this ;
 
-1. We've tagged the ingress with the annotation
-   `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"`.  This is the magic
-   ingredient that sets up the appropriate nginx configuration to route http/2
-   traffic to our service.
-1. We're terminating TLS at the ingress and have configured an SSL certificate
-   `fortune-teller.stack.build`.  The ingress matches traffic arriving as
-   `https://fortune-teller.stack.build:443` and routes unencrypted messages to
-   our kubernetes service.
+  ```
+  $ kubectl create -f ingress.go-grpc-greeter-server.yaml
+  ```
+
+- The takeaway is that we are not doing any TLS configuration on the server (as we are terminating TLS at the ingress level, gRPC traffic will travel unencrypted inside the cluster and arrive "insecure").
+
+- For your own application you may or may not want to do this.  If you prefer to forward encrypted traffic to your POD and terminate TLS at the gRPC server itself, add the ingress annotation `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`.
+
+- A few more things to note:
+
+  - We've tagged the ingress with the annotation `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"`.  This is the magic ingredient that sets up the appropriate nginx configuration to route http/2 traffic to our service.
+
+  - We're terminating TLS at the ingress and have configured an SSL certificate `wildcard.dev.mydomain.com`.  The ingress matches traffic arriving as `https://grpctest.dev.mydomain.com:443` and routes unencrypted messages to the backend Kubernetes service.
 
 ### Step 4: test the connection
 
-Once we've applied our configuration to kubernetes, it's time to test that we
-can actually talk to the backend.  To do this, we'll use the
-[grpcurl](https://github.com/fullstorydev/grpcurl) utility:
+- Once we've applied our configuration to Kubernetes, it's time to test that we can actually talk to the backend.  To do this, we'll use the [grpcurl](https://github.com/fullstorydev/grpcurl) utility:
 
-```sh
-$ grpcurl fortune-teller.stack.build:443 build.stack.fortune.FortuneTeller/Predict
-{
-  "message": "Let us endeavor so to live that when we come to die even the undertaker will be sorry.\n\t\t-- Mark Twain, \"Pudd'nhead Wilson's Calendar\""
-}
-```
+  ```
+  $ grpcurl grpctest.dev.mydomain.com:443 helloworld.Greeter/SayHello
+  {
+    "message": "
+  }
+  ```
 
 ### Debugging Hints
 
