@@ -117,56 +117,80 @@ func sortProtocols(protocols string) string {
 // Parse parses the annotations contained in the ingress
 // rule used to use a Certificate as authentication method
 func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
-	var err error
-	config := &Config{}
+	config := &Config{
+		Ciphers:            defaultProxySSLCiphers,
+		Protocols:          defaultProxySSLProtocols,
+		Verify:             defaultProxySSLVerify,
+		VerifyDepth:        defaultProxySSLVerifyDepth,
+		ProxySSLServerName: defaultProxySSLServerName,
+	}
+	foundAnnotation := false
 
 	proxysslsecret, err := parser.GetStringAnnotation("proxy-ssl-secret", ing)
 	if err != nil {
-		return &Config{}, err
-	}
-
-	_, _, err = k8s.ParseNameNS(proxysslsecret)
-	if err != nil {
-		return &Config{}, ing_errors.NewLocationDenied(err.Error())
-	}
-
-	proxyCert, err := p.r.GetAuthCertificate(proxysslsecret)
-	if err != nil {
-		e := errors.Wrap(err, "error obtaining certificate")
-		return &Config{}, ing_errors.LocationDenied{Reason: e}
-	}
-	config.AuthSSLCert = *proxyCert
-
-	config.Ciphers, err = parser.GetStringAnnotation("proxy-ssl-ciphers", ing)
-	if err != nil {
-		config.Ciphers = defaultProxySSLCiphers
-	}
-
-	config.Protocols, err = parser.GetStringAnnotation("proxy-ssl-protocols", ing)
-	if err != nil {
-		config.Protocols = defaultProxySSLProtocols
+		if !errors.Is(err, ing_errors.ErrMissingAnnotations) {
+			return &Config{}, err
+		}
 	} else {
-		config.Protocols = sortProtocols(config.Protocols)
+		_, _, err = k8s.ParseNameNS(proxysslsecret)
+		if err != nil {
+			return &Config{}, ing_errors.NewLocationDenied(err.Error())
+		}
+
+		proxyCert, err := p.r.GetAuthCertificate(proxysslsecret)
+		if err != nil {
+			e := errors.Wrap(err, "error obtaining certificate")
+			return &Config{}, ing_errors.LocationDenied{Reason: e}
+		}
+
+		config.AuthSSLCert = *proxyCert
+		foundAnnotation = true
 	}
 
-	config.ProxySSLName, err = parser.GetStringAnnotation("proxy-ssl-name", ing)
-	if err != nil {
-		config.ProxySSLName = ""
+	ciphers, err := parser.GetStringAnnotation("proxy-ssl-ciphers", ing)
+	if err == nil {
+		config.Ciphers = ciphers
+		foundAnnotation = true
 	}
 
-	config.Verify, err = parser.GetStringAnnotation("proxy-ssl-verify", ing)
-	if err != nil || !proxySSLOnOffRegex.MatchString(config.Verify) {
-		config.Verify = defaultProxySSLVerify
+	protocols, err := parser.GetStringAnnotation("proxy-ssl-protocols", ing)
+	if err == nil {
+		config.Protocols = sortProtocols(protocols)
+		foundAnnotation = true
 	}
 
-	config.VerifyDepth, err = parser.GetIntAnnotation("proxy-ssl-verify-depth", ing)
-	if err != nil || config.VerifyDepth == 0 {
-		config.VerifyDepth = defaultProxySSLVerifyDepth
+	proxySSLName, err := parser.GetStringAnnotation("proxy-ssl-name", ing)
+	if err == nil {
+		config.ProxySSLName = proxySSLName
+		foundAnnotation = true
 	}
 
-	config.ProxySSLServerName, err = parser.GetStringAnnotation("proxy-ssl-server-name", ing)
-	if err != nil || !proxySSLOnOffRegex.MatchString(config.ProxySSLServerName) {
-		config.ProxySSLServerName = defaultProxySSLServerName
+	verify, err := parser.GetStringAnnotation("proxy-ssl-verify", ing)
+	if err == nil {
+		if proxySSLOnOffRegex.MatchString(verify) {
+			config.Verify = verify
+		}
+		foundAnnotation = true
+	}
+
+	verifyDepth, err := parser.GetIntAnnotation("proxy-ssl-verify-depth", ing)
+	if err == nil {
+		if verifyDepth != 0 {
+			config.VerifyDepth = verifyDepth
+		}
+		foundAnnotation = true
+	}
+
+	proxySSLServerName, err := parser.GetStringAnnotation("proxy-ssl-server-name", ing)
+	if err == nil {
+		if proxySSLOnOffRegex.MatchString(proxySSLServerName) {
+			config.ProxySSLServerName = proxySSLServerName
+		}
+		foundAnnotation = true
+	}
+
+	if !foundAnnotation {
+		return &Config{}, ing_errors.ErrMissingAnnotations
 	}
 
 	return config, nil

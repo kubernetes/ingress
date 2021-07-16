@@ -196,6 +196,55 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 }
 
+func TestAnnotationsWithoutSecret(t *testing.T) {
+	ing := buildIngress()
+	data := map[string]string{}
+
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-ciphers")] = "HIGH:-SHA"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-name")] = "$host"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv1.3 SSLv2 TLSv1   TLSv1.2"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-server-name")] = "on"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-session-reuse")] = "off"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify")] = "on"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify-depth")] = "3"
+
+	ing.SetAnnotations(data)
+
+	fakeSecret := &mockSecret{}
+	i, err := NewParser(fakeSecret).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error with ingress: %v", err)
+	}
+
+	u, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+
+	if u.AuthSSLCert.CAFileName != "" {
+		t.Errorf("expected empty string but got %v", u.AuthSSLCert.CAFileName)
+	}
+	if u.Ciphers != "HIGH:-SHA" {
+		t.Errorf("expected %v but got %v", "HIGH:-SHA", u.Ciphers)
+	}
+	if u.Protocols != "SSLv2 TLSv1 TLSv1.2 TLSv1.3" {
+		t.Errorf("expected %v but got %v", "SSLv2 TLSv1 TLSv1.2 TLSv1.3", u.Protocols)
+	}
+	if u.Verify != "on" {
+		t.Errorf("expected %v but got %v", "on", u.Verify)
+	}
+	if u.VerifyDepth != 3 {
+		t.Errorf("expected %v but got %v", 3, u.VerifyDepth)
+	}
+	if u.ProxySSLName != "$host" {
+		t.Errorf("expected %v but got %v", "$host", u.ProxySSLName)
+	}
+	if u.ProxySSLServerName != "on" {
+		t.Errorf("expected %v but got %v", "on", u.ProxySSLServerName)
+	}
+
+}
+
 func TestEquals(t *testing.T) {
 	cfg1 := &Config{}
 	cfg2 := &Config{}

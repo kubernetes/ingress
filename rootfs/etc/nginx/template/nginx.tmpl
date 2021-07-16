@@ -1350,13 +1350,25 @@ stream {
             # Location denied. Reason: {{ $location.Denied | quote }}
             return 503;
             {{ end }}
+
+            {{ if not (empty $location.ProxySSL.Verify) }}
+            proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
+            {{ if eq $location.ProxySSL.Verify "on" }}
             {{ if not (empty $location.ProxySSL.CAFileName) }}
             # PEM sha: {{ $location.ProxySSL.CASHA }}
             proxy_ssl_trusted_certificate           {{ $location.ProxySSL.CAFileName }};
-            proxy_ssl_ciphers                       {{ $location.ProxySSL.Ciphers }};
-            proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
-            proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
+            {{ else }}
+            proxy_ssl_trusted_certificate           /etc/ssl/cert.pem;
+            {{ end }}
             proxy_ssl_verify_depth                  {{ $location.ProxySSL.VerifyDepth }};
+            {{ end }}
+            {{ end }}
+
+            {{ if not (empty $location.ProxySSL.Ciphers) }}
+            proxy_ssl_ciphers                       {{ $location.ProxySSL.Ciphers }};
+            {{ end }}
+            {{ if not (empty $location.ProxySSL.Protocols) }}
+            proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
             {{ end }}
 
             {{ if not (empty $location.ProxySSL.ProxySSLName) }}
