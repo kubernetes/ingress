@@ -82,6 +82,7 @@ func TestGlobalRateLimiting(t *testing.T) {
 	annRateLimitWindow := parser.GetAnnotationWithPrefix("global-rate-limit-window")
 	annRateLimitKey := parser.GetAnnotationWithPrefix("global-rate-limit-key")
 	annRateLimitIgnoredCIDRs := parser.GetAnnotationWithPrefix("global-rate-limit-ignored-cidrs")
+	annRateLimitHeaders := parser.GetAnnotationWithPrefix("global-rate-limit-set-headers")
 
 	testCases := []struct {
 		title          string
@@ -155,6 +156,24 @@ func TestGlobalRateLimiting(t *testing.T) {
 				Reason: errors.Wrap(fmt.Errorf(`time: unknown unit "mb" in duration "2mb"`),
 					"failed to parse 'global-rate-limit-window' value"),
 			},
+		},
+		{
+			"global-rate-limit-set-headers annotation",
+			map[string]string{
+				annRateLimit:        "100",
+				annRateLimitWindow:  "2m",
+				annRateLimitKey:     "$http_x_api_user",
+				annRateLimitHeaders: "true",
+			},
+			&Config{
+				Namespace:    expectedUID,
+				Limit:        100,
+				WindowSize:   120,
+				Key:          "$http_x_api_user",
+				IgnoredCIDRs: make([]string, 0),
+				SetHeaders:   true,
+			},
+			nil,
 		},
 	}
 

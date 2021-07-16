@@ -37,6 +37,7 @@ type Config struct {
 	Namespace    string   `json:"namespace"`
 	Limit        int      `json:"limit"`
 	WindowSize   int      `json:"window-size"`
+	SetHeaders   bool     `json:"set-headers"`
 	Key          string   `json:"key"`
 	IgnoredCIDRs []string `json:"ignored-cidrs"`
 }
@@ -50,6 +51,9 @@ func (l *Config) Equal(r *Config) bool {
 		return false
 	}
 	if l.WindowSize != r.WindowSize {
+		return false
+	}
+	if l.SetHeaders != r.SetHeaders {
 		return false
 	}
 	if l.Key != r.Key {
@@ -83,6 +87,11 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		return config, nil
 	}
 
+	setHeaders, err := parser.GetBoolAnnotation("global-rate-limit-set-headers", ing)
+	if err != nil {
+		setHeaders = false
+	}
+
 	windowSize, err := time.ParseDuration(rawWindowSize)
 	if err != nil {
 		return config, ing_errors.LocationDenied{
@@ -103,6 +112,7 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	config.Namespace = strings.Replace(string(ing.UID), "-", "", -1)
 	config.Limit = limit
+	config.SetHeaders = setHeaders
 	config.WindowSize = int(windowSize.Seconds())
 	config.Key = key
 	config.IgnoredCIDRs = ignoredCIDRs

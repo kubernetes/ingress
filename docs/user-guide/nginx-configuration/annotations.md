@@ -60,6 +60,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/global-rate-limit-window](#global-rate-limiting)|duration|
 |[nginx.ingress.kubernetes.io/global-rate-limit-key](#global-rate-limiting)|string|
 |[nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs](#global-rate-limiting)|string|
+|[nginx.ingress.kubernetes.io/global-rate-limit-set-headers](#global-rate-limiting)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
@@ -535,6 +536,13 @@ Extract a path out into its own ingres if you need to isolate a certain path.
 * `nginx.ingress.kubernetes.io/global-rate-limit-window`: Configures a time window (i.e `1m`) that the limit is applied. Required.
 * `nginx.ingress.kubernetes.io/global-rate-limit-key`: Configures a key for counting the samples. Defaults to `$remote_addr`. You can also combine multiple NGINX variables here, like `${remote_addr}-${http_x_api_client}` which would mean the limit will be applied to requests coming from the same API client (indicated by `X-API-Client` HTTP request header) with the same source IP address.
 * `nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs`: comma separated list of IPs and CIDRs to match client IP against. When there's a match request is not considered for rate limiting.
+* `nginx.ingress.kubernetes.io/global-rate-limit-set-headers`: Set to `true` to enable the addition of global rate limiting headers. Default is `false`
+  * Ratelimit-Limit: The requests quota in the configured time window;
+  * Ratelimit-Remaining: TThe remaining requests quota in the current time window;
+  * Ratelimit-Window: The number in seconds of the period window;
+  * Ratelimit-Reset: The time remaining in the current window, specified in seconds;
+  
+  For more information please see  [RateLimit Header Fields for HTTP](https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html).
 
 ### Permanent Redirect
 

@@ -1,6 +1,7 @@
 local resty_global_throttle = require("resty.global_throttle")
 local resty_ipmatcher = require("resty.ipmatcher")
 local util = require("util")
+local string = string
 
 local ngx = ngx
 local ngx_exit = ngx.exit
@@ -61,6 +62,15 @@ local function get_namespaced_key_value(namespace, key_value)
   return namespace .. key_value
 end
 
+local function set_headers(limit, estimated_final_count, window_size, remaining_time)
+  ngx.header["Ratelimit-Remaining"] = estimated_final_count == nil and {}
+  or string.format("%.0f",(limit - estimated_final_count))
+  ngx.header["Ratelimit-Limit"] = limit
+  ngx.header["Ratelimit-Window"] = window_size
+  ngx.header["Ratelimit-Reset"] = remaining_time == nil and {}
+  or string.format("%.0f",remaining_time)
+end
+
 function _M.throttle(config, location_config)
   if not is_enabled(config, location_config) then
     return
@@ -77,6 +87,10 @@ function _M.throttle(config, location_config)
   local is_limit_exceeding = DECISION_CACHE:get(namespaced_key_value)
   if is_limit_exceeding then
     ngx.var.global_rate_limit_exceeding = "c"
+
+    if location_config.set_headers then
+      set_headers(location_config.limit, 0, location_config.window_size, 0)
+    end
     return ngx_exit(config.status_code)
   end
 
@@ -99,12 +113,17 @@ function _M.throttle(config, location_config)
     return
   end
 
-  local desired_delay, estimated_final_count
-  estimated_final_count, desired_delay, err = my_throttle:process(key_value)
+  local desired_delay, estimated_final_count, remaining_time
+  estimated_final_count, desired_delay, remaining_time, err = my_throttle:process(key_value)
   if err then
     ngx.log(ngx.ERR, "error while processing key: ", err)
     -- fail open
     return
+  end
+
+  if location_config.set_headers then
+    set_headers(location_config.limit, estimated_final_count,
+    location_config.window_size, remaining_time)
   end
 
   if desired_delay then
