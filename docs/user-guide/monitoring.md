@@ -22,6 +22,8 @@ Running the following command deploys prometheus in Kubernetes:
 ```console
 kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/
 ```
+!!! Helpful
+Detailed information about installation and configuration can be found [here](https://dev.to/xaviergeerinck/monitoring-the-kubernetes-nginx-ingress-controller-with-prometheus-and-grafana-35gi)
 
 ### Prometheus Dashboard
 
