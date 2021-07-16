@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
+	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/runtime"
 )
 
@@ -739,6 +740,8 @@ type Configuration struct {
 	// GlobalRateLimitStatucCode determines the HTTP status code to return
 	// when limit is exceeding during global rate limiting.
 	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
+
+	GlobalTLSAuth resolver.GlobalTLSAuth `json:"global-tls-auth"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -755,6 +758,7 @@ func NewDefault() Configuration {
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}}
+	defGlobalTLSAuth := resolver.GlobalTLSAuth{AuthTLSVerifyClient: "", AuthTLSVerifyDepth: 1, AuthTLSSecret: ""}
 
 	cfg := Configuration{
 		AllowBackendServerHeader:         false,
@@ -896,6 +900,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
+		GlobalTLSAuth:                          defGlobalTLSAuth,
 	}
 
 	if klog.V(5).Enabled() {

@@ -92,6 +92,8 @@ type Storer interface {
 	//   ca.crt: contains the certificate chain used for authentication
 	GetAuthCertificate(string) (*resolver.AuthSSLCert, error)
 
+	GetGlobalTLSAuth() resolver.GlobalTLSAuth
+
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
 
@@ -704,6 +706,15 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 		}
 	}
 
+	// add global auth tls secret reference if the ingress references it
+	globalTlsSecretRef, err := s.getGlobalTlsSecretRef(ing)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		klog.Errorf("error reading global tls auth secret in configmap %q: %s", "global-auth-tls-secret", err)
+	}
+	if globalTlsSecretRef != "" {
+		refSecrets = append(refSecrets, globalTlsSecretRef)
+	}
+
 	// populate map with all secret references
 	s.secretIngressMap.Insert(key, refSecrets...)
 }
@@ -725,6 +736,31 @@ func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, er
 		return fmt.Sprintf("%v/%v", ing.Namespace, secrName), nil
 	}
 	return annValue, nil
+}
+
+// getGlobalTlsSecretRef returns an object reference formatted as a
+// 'namespace/name' key if the ingress has global-tls-auth enabled
+func (s *k8sStore) getGlobalTlsSecretRef(ing *networkingv1.Ingress) (string, error) {
+	enableGlobalTLSAuth, err := parser.GetBoolAnnotation("enable-global-tls-auth", ing)
+	if err != nil {
+		return "", err
+	}
+
+	if !enableGlobalTLSAuth {
+		return "", nil
+	}
+
+	globalTLSAuth := s.GetGlobalTLSAuth()
+	secrNs, secrName, err := cache.SplitMetaNamespaceKey(globalTLSAuth.AuthTLSSecret)
+	if secrName == "" {
+		return "", err
+	}
+
+	if secrNs == "" {
+		return fmt.Sprintf("%v/%v", ing.Namespace, secrName), nil
+	}
+
+	return globalTLSAuth.AuthTLSSecret, nil
 }
 
 // syncSecrets synchronizes data from all Secrets referenced by the given
@@ -871,6 +907,10 @@ func (s *k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 	defer s.backendConfigMu.RUnlock()
 
 	return s.backendConfig
+}
+
+func (s *k8sStore) GetGlobalTLSAuth() resolver.GlobalTLSAuth {
+	return s.GetBackendConfiguration().GlobalTLSAuth
 }
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {

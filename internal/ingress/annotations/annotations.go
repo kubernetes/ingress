@@ -33,6 +33,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreqglobal"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/authtlsglobal"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/backendprotocol"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
@@ -96,6 +97,7 @@ type Ingress struct {
 	ProxySSL           proxyssl.Config
 	RateLimit          ratelimit.Config
 	GlobalRateLimit    globalratelimit.Config
+	GlobalTLSAuth      authtlsglobal.GlobalTLSConfig
 	Redirect           redirect.Config
 	Rewrite            rewrite.Config
 	Satisfy            string
@@ -130,6 +132,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"BasicDigestAuth":      auth.NewParser(auth.AuthDirectory, cfg),
 			"Canary":               canary.NewParser(cfg),
 			"CertificateAuth":      authtls.NewParser(cfg),
+			"GlobalTLSAuth":        authtlsglobal.NewParser(cfg),
 			"ClientBodyBufferSize": clientbodybuffersize.NewParser(cfg),
 			"ConfigurationSnippet": snippet.NewParser(cfg),
 			"Connection":           connection.NewParser(cfg),

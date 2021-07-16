@@ -61,6 +61,9 @@ const (
 	globalAuthSnippet             = "global-auth-snippet"
 	globalAuthCacheKey            = "global-auth-cache-key"
 	globalAuthCacheDuration       = "global-auth-cache-duration"
+	globalAuthTLSVerifyClient     = "global-auth-tls-verify-client"
+	globalAuthTLSVerifyDepth      = "global-auth-tls-verify-depth"
+	globalAuthTLSSecret           = "global-auth-tls-secret"
 	luaSharedDictsKey             = "lua-shared-dicts"
 	plugins                       = "plugins"
 )
@@ -311,6 +314,26 @@ func ReadConfig(src map[string]string) config.Configuration {
 			klog.Warningf("Global auth location denied - %s", err)
 		}
 		to.GlobalExternalAuth.AuthCacheDuration = cacheDurations
+	}
+
+	if val, ok := conf[globalAuthTLSVerifyClient]; ok {
+		delete(conf, globalAuthTLSVerifyClient)
+		to.GlobalTLSAuth.AuthTLSVerifyClient = val
+	}
+
+	if val, ok := conf[globalAuthTLSVerifyDepth]; ok {
+		delete(conf, globalAuthTLSVerifyDepth)
+		i, err := strconv.Atoi(val)
+		if err != nil {
+			klog.Warningf("Invalid global-auth-tls-verify-depth %v. Setting to default value 1 instead.", val, err)
+		} else {
+			to.GlobalTLSAuth.AuthTLSVerifyDepth = i
+		}
+	}
+
+	if val, ok := conf[globalAuthTLSSecret]; ok {
+		delete(conf, globalAuthTLSSecret)
+		to.GlobalTLSAuth.AuthTLSSecret = val
 	}
 
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value

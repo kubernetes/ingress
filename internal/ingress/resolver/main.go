@@ -41,6 +41,14 @@ type Resolver interface {
 
 	// GetService searches for services containing the namespace and name using a the character /
 	GetService(string) (*apiv1.Service, error)
+
+	GetGlobalTLSAuth() GlobalTLSAuth
+}
+
+type GlobalTLSAuth struct {
+	AuthTLSVerifyClient string `json:"authTLSVerifyClient"`
+	AuthTLSVerifyDepth  int    `json:"authTLSVerifyDepth"`
+	AuthTLSSecret       string `json:"authTLSSecret"`
 }
 
 // AuthSSLCert contains the necessary information to do certificate based

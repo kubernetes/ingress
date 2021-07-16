@@ -46,6 +46,10 @@ func (m Mock) GetAuthCertificate(string) (*AuthSSLCert, error) {
 	return nil, nil
 }
 
+func (m Mock) GetGlobalTLSAuth() GlobalTLSAuth {
+	return GlobalTLSAuth{}
+}
+
 // GetService searches for services contenating the namespace and name using a the character /
 func (m Mock) GetService(string) (*apiv1.Service, error) {
 	return nil, nil

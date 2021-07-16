@@ -539,18 +539,22 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				continue
 			}
 
+			if anns.GlobalTLSAuth.EnableGlobalTLSAuth {
+				server.CertificateAuth = anns.GlobalTLSAuth.AuthTLSConfig
+			}
+
 			if server.AuthTLSError == "" && anns.CertificateAuth.AuthTLSError != "" {
 				server.AuthTLSError = anns.CertificateAuth.AuthTLSError
 			}
 
-			if server.CertificateAuth.CAFileName == "" {
+			if anns.CertificateAuth.CAFileName != "" {
 				server.CertificateAuth = anns.CertificateAuth
 				if server.CertificateAuth.Secret != "" && server.CertificateAuth.CAFileName == "" {
 					klog.V(3).Infof("Secret %q has no 'ca.crt' key, mutual authentication disabled for Ingress %q",
 						server.CertificateAuth.Secret, ingKey)
 				}
-			} else {
-				klog.V(3).Infof("Server %q is already configured for mutual authentication (Ingress %q)",
+			} else if server.CertificateAuth.CAFileName != "" {
+				klog.V(3).Infof("Server %q is already configured global-auth-tls-secret for mutual authentication (Ingress %q)",
 					server.Hostname, ingKey)
 			}
 
