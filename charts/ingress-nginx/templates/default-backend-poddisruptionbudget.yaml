@@ -1,3 +1,4 @@
+{{- if .Values.defaultBackend.enabled -}}
 {{- if or (gt (.Values.defaultBackend.replicaCount | int) 1) (gt (.Values.defaultBackend.autoscaling.minReplicas | int) 1) }}
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
@@ -13,4 +14,5 @@ spec:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: default-backend
   minAvailable: {{ .Values.defaultBackend.minAvailable }}
+{{- end }}
 {{- end }}
