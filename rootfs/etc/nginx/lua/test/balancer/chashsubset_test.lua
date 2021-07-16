@@ -86,5 +86,21 @@ describe("Balancer chash subset", function()
         assert.are.equal(#endpoints, 3)
       end
     end)
+
+    it("set alternative backends", function()
+      local backend = get_test_backend(7)
+      backend.trafficShapingPolicy  = {
+        weight = 0,
+        header = "",
+        headerValue = "",
+        cookie = ""
+      }
+      backend.alternativeBackends = {
+        "my-dummy-canary-backend"
+      }
+      local instance = balancer_chashsubset:new(backend)
+      assert.not_equal(instance.traffic_shaping_policy, nil)
+      assert.not_equal(instance.alternative_backends, nil)
+    end)
   end)
 end)
