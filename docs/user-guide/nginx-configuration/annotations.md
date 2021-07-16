@@ -240,23 +240,18 @@ It is possible to enable Client Certificate Authentication using additional anno
 
 Client Certificate Authentication is applied per host and it is not possible to specify rules that differ for individual paths.
 
-The annotations are:
+To enable, add the annotation `nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secretName`. This secret must have a file named `ca.crt` containing the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
 
-* `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`:
-  The name of the Secret that contains the full Certificate Authority chain `ca.crt` that is enabled to authenticate against this Ingress.
-  This annotation expects the Secret name in the form "namespace/secretName".
-* `nginx.ingress.kubernetes.io/auth-tls-verify-depth`:
-  The validation depth between the provided client certificate and the Certification Authority chain.
-* `nginx.ingress.kubernetes.io/auth-tls-verify-client`:
-  Enables verification of client certificates. Possible values are:
-  * `off`: Don't request client certificates and don't do client certificate verification. (default)
-  * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: secretName`. Failed certificate verification will result in a status code 400 (Bad Request).
-  * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
-  * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
-* `nginx.ingress.kubernetes.io/auth-tls-error-page`:
-  The URL/Page that user should be redirected in case of a Certificate Authentication Error
-* `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`:
-  Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
+You can further customize client certificate authentication and behaviour with these annotations:
+
+* `nginx.ingress.kubernetes.io/auth-tls-verify-depth`: The validation depth between the provided client certificate and the Certification Authority chain. (default: 1)
+* `nginx.ingress.kubernetes.io/auth-tls-verify-client`: Enables verification of client certificates. Possible values are:
+    * `on`: Request a client certificate that must be signed by a certificate that is included in the secret key `ca.crt` of the secret specified by `nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secretName`. Failed certificate verification will result in a status code 400 (Bad Request) (default)
+    * `off`: Don't request client certificates and don't do client certificate verification.
+    * `optional`: Do optional client certificate validation against the CAs from `auth-tls-secret`. The request fails with status code 400 (Bad Request) when a certificate is provided that is not signed by the CA. When no or an otherwise invalid certificate is provided, the request does not fail, but instead the verification result is sent to the upstream service.
+    * `optional_no_ca`: Do optional client certificate validation, but do not fail the request when the client certificate is not signed by the CAs from `auth-tls-secret`. Certificate verification result is sent to the upstream service.
+* `nginx.ingress.kubernetes.io/auth-tls-error-page`: The URL/Page that user should be redirected in case of a Certificate Authentication Error
+* `nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream`: Indicates if the received certificates should be passed or not to the upstream server in the header `ssl-client-cert`. Possible values are "true" or "false" (default).
 
 The following headers are sent to the upstream service according to the `auth-tls-*` annotations:
 
@@ -329,39 +324,43 @@ location enabling this functionality.
 
 CORS can be controlled with the following annotations:
 
-* `nginx.ingress.kubernetes.io/cors-allow-methods`
-  controls which methods are accepted. This is a multi-valued field, separated by ',' and
-  accepts only letters (upper and lower case).
-  - Default: `GET, PUT, POST, DELETE, PATCH, OPTIONS`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
+* `nginx.ingress.kubernetes.io/cors-allow-methods`: Controls which methods are accepted.
 
-* `nginx.ingress.kubernetes.io/cors-allow-headers`
-  controls which headers are accepted. This is a multi-valued field, separated by ',' and accepts letters,
-  numbers, _ and -.
-  - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+    This is a multi-valued field, separated by ',' and accepts only letters (upper and lower case).
 
-* `nginx.ingress.kubernetes.io/cors-expose-headers`
-  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
-  letters, numbers, _, - and *.
-  - Default: *empty*
-  - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
+    - Default: `GET, PUT, POST, DELETE, PATCH, OPTIONS`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"`
 
-* `nginx.ingress.kubernetes.io/cors-allow-origin`
-  controls what's the accepted Origin for CORS.
-  This is a single field value, with the following format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
-  - Default: `*`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
+* `nginx.ingress.kubernetes.io/cors-allow-headers`: Controls which headers are accepted.
 
-* `nginx.ingress.kubernetes.io/cors-allow-credentials`
-  controls if credentials can be passed during CORS operations.
-  - Default: `true`
-  - Example: `nginx.ingress.kubernetes.io/cors-allow-credentials: "false"`
+    This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -.
 
-* `nginx.ingress.kubernetes.io/cors-max-age`
-  controls how long preflight requests can be cached.
-  Default: `1728000`
-  Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
+    - Default: `DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
+
+* `nginx.ingress.kubernetes.io/cors-expose-headers`: Controls which headers are exposed to response.
+
+    This is a multi-valued field, separated by ',' and accepts letters, numbers, _, - and *.
+
+    - Default: *empty*
+    - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
+
+* `nginx.ingress.kubernetes.io/cors-allow-origin`: Controls what's the accepted Origin for CORS.
+
+    This is a single field value, with the following format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
+
+    - Default: `*`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443"`
+
+* `nginx.ingress.kubernetes.io/cors-allow-credentials`: Controls if credentials can be passed during CORS operations.
+
+    - Default: `true`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-credentials: "false"`
+
+* `nginx.ingress.kubernetes.io/cors-max-age`: Controls how long preflight requests can be cached.
+
+    - Default: `1728000`
+    - Example: `nginx.ingress.kubernetes.io/cors-max-age: 600`
 
 !!! note
     For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html)

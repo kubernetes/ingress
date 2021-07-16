@@ -17,7 +17,6 @@ limitations under the License.
 package annotations
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strings"
@@ -34,7 +33,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		f.NewEchoDeploymentWithReplicas(2)
 	})
 
-	ginkgo.It("should set valid auth-tls-secret", func() {
+	ginkgo.It("should set sslClientCertificate, sslVerifyClient and sslVerifyDepth with auth-tls-secret", func() {
 		host := "authtls.foo.com"
 		nameSpace := f.Namespace
 
@@ -45,16 +44,28 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			nameSpace)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		annotations := map[string]string{
+		annotations := map[string]string{}
+
+		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, "ssl_client_certificate") &&
+					!strings.Contains(server, "ssl_verify_client") &&
+					!strings.Contains(server, "ssl_verify_depth")
+			})
+
+		annotations = map[string]string{
 			"nginx.ingress.kubernetes.io/auth-tls-secret": nameSpace + "/" + host,
 		}
 
-		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+		ing.SetAnnotations(annotations)
+		f.UpdateIngress(ing)
 
 		assertSslClientCertificateConfig(f, host, "on", "1")
 
 		// Send Request without Client Certs
-		f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
+		f.HTTPTestClient().
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
 			WithHeader("Host", host).
@@ -100,7 +111,7 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			Status(http.StatusOK)
 	})
 
-	ginkgo.It("should set valid auth-tls-secret, pass certificate to upstream, and error page", func() {
+	ginkgo.It("should 302 redirect to error page instead of 400 when auth-tls-error-page is set", func() {
 		host := "authtls.foo.com"
 		nameSpace := f.Namespace
 
@@ -114,9 +125,8 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-tls-secret":                       nameSpace + "/" + host,
-			"nginx.ingress.kubernetes.io/auth-tls-error-page":                   f.GetURL(framework.HTTP) + errorPath,
-			"nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream": "true",
+			"nginx.ingress.kubernetes.io/auth-tls-secret":     nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-error-page": f.GetURL(framework.HTTP) + errorPath,
 		}
 
 		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
@@ -124,12 +134,10 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 		assertSslClientCertificateConfig(f, host, "on", "1")
 
 		sslErrorPage := fmt.Sprintf("error_page 495 496 = %s;", f.GetURL(framework.HTTP)+errorPath)
-		sslUpstreamClientCert := "proxy_set_header ssl-client-cert $ssl_client_escaped_cert;"
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, sslErrorPage) &&
-					strings.Contains(server, sslUpstreamClientCert)
+				return strings.Contains(server, sslErrorPage)
 			})
 
 		// Send Request without Client Certs
@@ -148,6 +156,51 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
+	})
+
+	ginkgo.It("should pass URL-encoded certificate to upstream", func() {
+		host := "authtls.foo.com"
+		nameSpace := f.Namespace
+
+		clientConfig, err := framework.CreateIngressMASecret(
+			f.KubeClientSet,
+			host,
+			host,
+			nameSpace)
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-tls-secret":                       nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream": "true",
+		}
+
+		f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+
+		assertSslClientCertificateConfig(f, host, "on", "1")
+
+		sslUpstreamClientCert := "proxy_set_header ssl-client-cert $ssl_client_escaped_cert;"
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, sslUpstreamClientCert)
+			})
+
+		// Send Request without Client Certs
+		f.HTTPTestClient().
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusBadRequest)
+
+		// Send Request Passing the Client Certs
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains("ssl-client-cert=-----BEGIN%20CERTIFICATE-----%0A")
 	})
 
 	ginkgo.It("should validate auth-tls-verify-client", func() {
