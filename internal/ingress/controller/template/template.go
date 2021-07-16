@@ -617,6 +617,8 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	proxyPass := "proxy_pass"
 
 	switch location.BackendProtocol {
+	case "AUTO_HTTP":
+		proto = "$scheme://"
 	case "HTTPS":
 		proto = "https://"
 	case "GRPC":

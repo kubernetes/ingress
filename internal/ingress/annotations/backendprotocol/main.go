@@ -31,7 +31,7 @@ import (
 const HTTP = "HTTP"
 
 var (
-	validProtocols = regexp.MustCompile(`^(HTTP|HTTPS|AJP|GRPC|GRPCS|FCGI)$`)
+	validProtocols = regexp.MustCompile(`^(AUTO_HTTP|HTTP|HTTPS|AJP|GRPC|GRPCS|FCGI)$`)
 )
 
 type backendProtocol struct {
