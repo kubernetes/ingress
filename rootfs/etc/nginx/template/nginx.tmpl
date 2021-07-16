@@ -1096,7 +1096,7 @@ stream {
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
             set $global_rate_limit_exceeding n;
 
-            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $location }}
+            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
             mirror {{ $location.Mirror.Source }};

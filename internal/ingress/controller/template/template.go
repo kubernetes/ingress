@@ -1429,7 +1429,7 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 	return out
 }
 
-func buildOpentracingForLocation(isOTEnabled bool, location *ingress.Location) string {
+func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
 	isOTEnabledInLoc := location.Opentracing.Enabled
 	isOTSetInLoc := location.Opentracing.Set
 
@@ -1437,25 +1437,21 @@ func buildOpentracingForLocation(isOTEnabled bool, location *ingress.Location) s
 		if isOTSetInLoc && !isOTEnabledInLoc {
 			return "opentracing off;"
 		}
-
-		opc := opentracingPropagateContext(location)
-		if opc != "" {
-			opc = fmt.Sprintf("opentracing on;\n%v", opc)
-		}
-
-		return opc
+	} else if !isOTSetInLoc || !isOTEnabledInLoc {
+		return ""
 	}
 
-	if isOTSetInLoc && isOTEnabledInLoc {
-		opc := opentracingPropagateContext(location)
-		if opc != "" {
-			opc = fmt.Sprintf("opentracing on;\n%v", opc)
-		}
-
-		return opc
+	opc := opentracingPropagateContext(location)
+	if opc != "" {
+		opc = fmt.Sprintf("opentracing on;\n%v", opc)
 	}
 
-	return ""
+	if (!isOTTrustSet && !location.Opentracing.TrustSet) ||
+		(location.Opentracing.TrustSet && !location.Opentracing.TrustEnabled) {
+		opc = opc + "\nopentracing_trust_incoming_span off;"
+	}
+
+	return opc
 }
 
 // shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.

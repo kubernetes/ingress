@@ -533,6 +533,11 @@ type Configuration struct {
 	// OpentracingOperationName specifies a custom name for the location span
 	OpentracingLocationOperationName string `json:"opentracing-location-operation-name"`
 
+	// OpentracingTrustIncomingSpan sets whether or not to trust incoming trace spans
+	// If false, incoming span headers will be rejected
+	// Default: true
+	OpentracingTrustIncomingSpan bool `json:"opentracing-trust-incoming-span"`
+
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
 
@@ -867,6 +872,7 @@ func NewDefault() Configuration {
 		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
+		OpentracingTrustIncomingSpan:           true,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,

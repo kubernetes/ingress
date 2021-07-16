@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	enableOpentracing = "enable-opentracing"
+	enableOpentracing            = "enable-opentracing"
+	opentracingTrustIncomingSpan = "opentracing-trust-incoming-span"
 
 	zipkinCollectorHost = "zipkin-collector-host"
 
@@ -78,6 +79,21 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "opentracing on")
+			})
+	})
+
+	ginkgo.It("should include opentracing_trust_incoming_span off directive when disabled", func() {
+		config := map[string]string{}
+		config[enableOpentracing] = "true"
+		config[opentracingTrustIncomingSpan] = "false"
+		config[zipkinCollectorHost] = "127.0.0.1"
+		f.SetNginxConfigMapData(config)
+
+		f.EnsureIngress(framework.NewSingleIngress(enableOpentracing, "/", enableOpentracing, f.Namespace, "http-svc", 80, nil))
+
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return strings.Contains(cfg, "opentracing_trust_incoming_span off")
 			})
 	})
 

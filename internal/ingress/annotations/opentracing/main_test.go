@@ -99,6 +99,29 @@ func TestIngressAnnotationOpentracingSetFalse(t *testing.T) {
 	}
 }
 
+func TestIngressAnnotationOpentracingTrustSetTrue(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("enable-opentracing")] = "true"
+	data[parser.GetAnnotationWithPrefix("opentracing-trust-incoming-span")] = "true"
+	ing.SetAnnotations(data)
+
+	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	openTracing, ok := val.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if !openTracing.Enabled {
+		t.Errorf("expected annotation value to be true, got false")
+	}
+
+	if !openTracing.TrustEnabled {
+		t.Errorf("expected annotation value to be true, got false")
+	}
+}
+
 func TestIngressAnnotationOpentracingUnset(t *testing.T) {
 	ing := buildIngress()
 

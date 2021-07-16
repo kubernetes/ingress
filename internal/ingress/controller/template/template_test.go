@@ -1325,32 +1325,44 @@ func TestShouldLoadModSecurityModule(t *testing.T) {
 
 func TestOpentracingForLocation(t *testing.T) {
 	trueVal := true
+	falseVal := false
 
 	loadOT := `opentracing on;
 opentracing_propagate_context;`
+	loadOTUntrustedSpan := `opentracing on;
+opentracing_propagate_context;
+opentracing_trust_incoming_span off;`
 	testCases := []struct {
-		description string
-		globalOT    bool
-		isSetInLoc  bool
-		isOTInLoc   *bool
-		expected    string
+		description     string
+		globalOT        bool
+		isSetInLoc      bool
+		isOTInLoc       *bool
+		globalTrust     bool
+		isTrustSetInLoc bool
+		isTrustInLoc    *bool
+		expected        string
 	}{
-		{"globally enabled, without annotation", true, false, nil, loadOT},
-		{"globally enabled and enabled in location", true, true, &trueVal, loadOT},
-		{"globally disabled and not enabled in location", false, false, nil, ""},
-		{"globally disabled but enabled in location", false, true, &trueVal, loadOT},
-		{"globally disabled, enabled in location but false", false, true, &trueVal, loadOT},
+		{"globally enabled, without annotation", true, false, nil, true, false, nil, loadOT},
+		{"globally enabled and enabled in location", true, true, &trueVal, true, false, nil, loadOT},
+		{"globally disabled and not enabled in location", false, false, nil, true, false, nil, ""},
+		{"globally disabled but enabled in location", false, true, &trueVal, true, false, nil, loadOT},
+		{"globally trusted, not trusted in location", true, false, nil, true, true, &falseVal, loadOTUntrustedSpan},
+		{"not globally trusted, trust set in location", true, false, nil, false, true, &trueVal, loadOT},
+		{"not globally trusted, trust not set in location", true, false, nil, false, false, nil, loadOTUntrustedSpan},
 	}
 
 	for _, testCase := range testCases {
 		il := &ingress.Location{
-			Opentracing: opentracing.Config{Set: testCase.isSetInLoc},
+			Opentracing: opentracing.Config{Set: testCase.isSetInLoc, TrustSet: testCase.isTrustSetInLoc},
 		}
 		if il.Opentracing.Set {
 			il.Opentracing.Enabled = *testCase.isOTInLoc
 		}
+		if il.Opentracing.TrustSet {
+			il.Opentracing.TrustEnabled = *testCase.isTrustInLoc
+		}
 
-		actual := buildOpentracingForLocation(testCase.globalOT, il)
+		actual := buildOpentracingForLocation(testCase.globalOT, testCase.globalTrust, il)
 
 		if testCase.expected != actual {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.description, testCase.expected, actual)

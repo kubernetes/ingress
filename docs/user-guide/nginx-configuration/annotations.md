@@ -110,6 +110,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
@@ -759,6 +760,15 @@ to enable it or disable it for a specific ingress (e.g. to turn off tracing of e
 
 ```yaml
 nginx.ingress.kubernetes.io/enable-opentracing: "true"
+```
+
+### Opentracing Trust Incoming Span
+
+The option to trust incoming trace spans can be enabled or disabled globally through the ConfigMap but this will
+sometimes need to be overriden to enable it or disable it for a specific ingress (e.g. only enable on a private endpoint)
+
+```yaml
+nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: "true"
 ```
 
 ### X-Forwarded-Prefix Header
