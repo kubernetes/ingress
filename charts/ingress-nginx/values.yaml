@@ -7,6 +7,12 @@
 # nameOverride:
 # fullnameOverride:
 
+## Labels to apply to all resources
+##
+commonLabels: {}
+# scmhash: abc123
+# myLabel: aakkmd
+
 controller:
   name: controller
   image:
