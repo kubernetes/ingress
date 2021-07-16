@@ -676,8 +676,8 @@ http {
         }
 
         location /configuration {
-            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }}m;
-            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }}m;
+            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }};
+            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }};
             proxy_buffering                         off;
 
             content_by_lua_block {

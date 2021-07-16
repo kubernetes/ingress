@@ -19,6 +19,7 @@ package template
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -67,21 +68,22 @@ const (
 
 var (
 	validRedirectCodes    = sets.NewInt([]int{301, 302, 307, 308}...)
+	dictSizeRegex         = regexp.MustCompile(`^(\d+)([kKmM])?$`)
 	defaultLuaSharedDicts = map[string]int{
-		"configuration_data":            20,
-		"certificate_data":              20,
-		"balancer_ewma":                 10,
-		"balancer_ewma_last_touched_at": 10,
-		"balancer_ewma_locks":           1,
-		"certificate_servers":           5,
-		"ocsp_response_cache":           5, // keep this same as certificate_servers
-		"global_throttle_cache":         10,
+		"configuration_data":            20000,
+		"certificate_data":              20000,
+		"balancer_ewma":                 10000,
+		"balancer_ewma_last_touched_at": 10000,
+		"balancer_ewma_locks":           1000,
+		"certificate_servers":           5000,
+		"ocsp_response_cache":           5000, // keep this same as certificate_servers
+		"global_throttle_cache":         10000,
 	}
 	defaultGlobalAuthRedirectParam = "rd"
 )
 
 const (
-	maxAllowedLuaDictSize = 200
+	maxAllowedLuaDictSize = 200000
 	maxNumberOfLuaDicts   = 100
 )
 
@@ -117,18 +119,18 @@ func ReadConfig(src map[string]string) config.Configuration {
 			v = strings.Replace(v, " ", "", -1)
 			results := strings.SplitN(v, ":", 2)
 			dictName := results[0]
-			size, err := strconv.Atoi(results[1])
-			if err != nil {
-				klog.Errorf("Ignoring non integer value %v for Lua dictionary %v: %v.", results[1], dictName, err)
+			size := dictStrToKb(results[1])
+			if size < 0 {
+				klog.Errorf("Ignoring poorly formatted value %v for Lua dictionary %v", results[1], dictName)
 				continue
 			}
 			if size > maxAllowedLuaDictSize {
-				klog.Errorf("Ignoring %v for Lua dictionary %v: maximum size is %v.", size, dictName, maxAllowedLuaDictSize)
+				klog.Errorf("Ignoring %v for Lua dictionary %v: maximum size is %vk.", results[1], dictName, maxAllowedLuaDictSize)
 				continue
 			}
 			if len(luaSharedDicts)+1 > maxNumberOfLuaDicts {
 				klog.Errorf("Ignoring %v for Lua dictionary %v: can not configure more than %v dictionaries.",
-					size, dictName, maxNumberOfLuaDicts)
+					results[1], dictName, maxNumberOfLuaDicts)
 				continue
 			}
 
@@ -426,4 +428,23 @@ func splitAndTrimSpace(s, sep string) []string {
 	}
 
 	return values
+}
+
+func dictStrToKb(sizeStr string) int {
+	sizeMatch := dictSizeRegex.FindStringSubmatch(sizeStr)
+	if sizeMatch == nil {
+		return -1
+	}
+	size, _ := strconv.Atoi(sizeMatch[1]) // validated already with regex
+	if sizeMatch[2] == "" || sizeMatch[2] == "M" || sizeMatch[2] == "m" {
+		size *= 1000
+	}
+	return size
+}
+
+func dictKbToStr(size int) string {
+	if size%1000 == 0 {
+		return fmt.Sprintf("%dM", size/1000)
+	}
+	return fmt.Sprintf("%dK", size)
 }

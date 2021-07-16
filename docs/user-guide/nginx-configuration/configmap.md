@@ -1049,6 +1049,12 @@ For example following will set default `certificate_data` dictionary to `100M` a
 lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 5"
 ```
 
+You can optionally set a size unit to allow for kilobyte-granularity. Allowed units are 'm' or 'k' (case-insensitive), and it defaults to MB if no unit is provided. Here is a similar example, but the `my_custom_plugin` dict is only 512KB.
+
+```
+lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 512k"
+```
+
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
 
