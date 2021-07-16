@@ -102,6 +102,7 @@ The following table shows a configuration option's name, type, and the default v
 |[gzip-level](#gzip-level)|int|1|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
+|[worker-rlimit-core](#worker-rlimit-core)|string|empty|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
 |[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"240s"|
 |[load-balance](#load-balance)|string|"round_robin"|
@@ -661,6 +662,10 @@ _**default:**_ `application/atom+xml application/javascript application/x-javasc
 
 Sets the number of [worker processes](http://nginx.org/en/docs/ngx_core_module.html#worker_processes).
 The default of "auto" means number of available CPU cores.
+
+## worker-rlimit-core
+
+Sets the limit on the [largest size of a core file](http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_core).
 
 ## worker-cpu-affinity
 

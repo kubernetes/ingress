@@ -52,6 +52,7 @@ const (
 	nginxStatusIpv6Whitelist      = "nginx-status-ipv6-whitelist"
 	proxyHeaderTimeout            = "proxy-protocol-header-timeout"
 	workerProcesses               = "worker-processes"
+	workerRlimitCore              = "worker-rlimit-core"
 	globalAuthURL                 = "global-auth-url"
 	globalAuthMethod              = "global-auth-method"
 	globalAuthSignin              = "global-auth-signin"
@@ -353,6 +354,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 
 		delete(conf, workerProcesses)
+	}
+
+	if val, ok := conf[workerRlimitCore]; ok {
+		to.WorkerRlimitCore = val
+		delete(conf, workerRlimitCore)
 	}
 
 	if val, ok := conf[plugins]; ok {

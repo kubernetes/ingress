@@ -432,6 +432,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
 
+	// WorkerRlimitCore Changes the limit on the largest size of a core file (RLIMIT_CORE) for worker processes.
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_core
+	WorkerRlimitCore string `json:"worker-rlimit-core,omitempty"`
+
 	// Defines a timeout for a graceful shutdown of worker processes
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
 	WorkerShutdownTimeout string `json:"worker-shutdown-timeout,omitempty"`

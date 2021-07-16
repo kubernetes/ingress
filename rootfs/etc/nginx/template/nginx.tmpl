@@ -45,6 +45,9 @@ worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
 {{ end }}
 
 worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }};
+{{ if $cfg.WorkerRlimitCore }}
+worker_rlimit_core {{ $cfg.WorkerRlimitCore }};
+{{ end }}
 
 {{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}
