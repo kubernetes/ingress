@@ -58,10 +58,10 @@ spec:
     {{- end }}
   {{- end }}
   {{- range $key, $value := .Values.tcp }}
-    - name: {{ $key }}-tcp
+    - name: port-{{ $key }}-tcp
       port: {{ $key }}
       protocol: TCP
-      targetPort: {{ $key }}-tcp
+      targetPort: port-{{ $key }}-tcp
     {{- if $.Values.controller.service.nodePorts.tcp }}
     {{- if index $.Values.controller.service.nodePorts.tcp $key }}
       nodePort: {{ index $.Values.controller.service.nodePorts.tcp $key }}
@@ -69,10 +69,10 @@ spec:
     {{- end }}
   {{- end }}
   {{- range $key, $value := .Values.udp }}
-    - name: {{ $key }}-udp
+    - name: port-{{ $key }}-udp
       port: {{ $key }}
       protocol: UDP
-      targetPort: {{ $key }}-udp
+      targetPort: port-{{ $key }}-udp
     {{- if $.Values.controller.service.nodePorts.udp }}
     {{- if index $.Values.controller.service.nodePorts.udp $key }}
       nodePort: {{ index $.Values.controller.service.nodePorts.udp $key }}
