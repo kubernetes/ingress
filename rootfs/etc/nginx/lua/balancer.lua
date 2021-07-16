@@ -17,6 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
+local hashcode = require("balancer.hashcode").str_hash_to_int
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -208,6 +209,38 @@ local function route_to_alternative_balancer(balancer)
   if not traffic_shaping_policy then
     ngx.log(ngx.ERR, "traffic shaping policy is not set for balancer ",
             "of backend: ", tostring(backend_name))
+    return false
+  end
+
+  if traffic_shaping_policy.canaryConsistency and traffic_shaping_policy.canaryConsistency ~= "" then
+    local seed = traffic_shaping_policy.hashSeed
+    if not seed then
+      seed = ""
+    end
+
+    if traffic_shaping_policy.canaryConsistency == "header" then
+      local target_header = util.replace_special_char(traffic_shaping_policy.header,
+        "-", "_")
+      local header_value = ngx.var["http_" .. target_header]
+      if header_value then
+        local hash_value = math.abs(hashcode(header_value..seed))
+        if hash_value % 100 < traffic_shaping_policy.weight then
+          return true
+        end
+      end
+    end
+
+    if traffic_shaping_policy.canaryConsistency == "cookie" then
+      local target_cookie = traffic_shaping_policy.cookie
+      local cookie = ngx.var["cookie_" .. target_cookie]
+      if cookie then
+        local hash_value = math.abs(hashcode(cookie..seed))
+        if hash_value % 100 < traffic_shaping_policy.weight then
+          return true
+        end
+      end
+    end
+
     return false
   end
 

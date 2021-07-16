@@ -257,6 +257,12 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 	if tsp1.Cookie != tsp2.Cookie {
 		return false
 	}
+	if tsp1.CanaryConsistency != tsp2.CanaryConsistency {
+		return false
+	}
+	if tsp1.HashSeed != tsp2.HashSeed {
+		return false
+	}
 
 	return true
 }

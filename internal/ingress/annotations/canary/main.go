@@ -30,12 +30,14 @@ type canary struct {
 
 // Config returns the configuration rules for setting up the Canary
 type Config struct {
-	Enabled       bool
-	Weight        int
-	Header        string
-	HeaderValue   string
-	HeaderPattern string
-	Cookie        string
+	Enabled           bool
+	Weight            int
+	Header            string
+	HeaderValue       string
+	HeaderPattern     string
+	Cookie            string
+	CanaryConsistency string
+	HashSeed          string
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -79,8 +81,22 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Cookie = ""
 	}
 
+	config.CanaryConsistency, err = parser.GetStringAnnotation("canary-consistency", ing)
+	if err != nil {
+		config.CanaryConsistency = ""
+	}
+
+	if config.CanaryConsistency != "header" && config.CanaryConsistency != "cookie" {
+		config.CanaryConsistency = ""
+	}
+
+	config.HashSeed, err = parser.GetStringAnnotation("canary-hash-seed", ing)
+	if err != nil {
+		config.HashSeed = ""
+	}
+
 	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 ||
-		len(config.HeaderPattern) > 0) {
+		len(config.HeaderPattern) > 0 || len(config.CanaryConsistency) > 0 || len(config.HashSeed) > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 
