@@ -262,6 +262,51 @@ func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {
 	return nil
 }
 
+// ValidateAndGetCACertSHA validates the CA file in the given path and return its SHA
+// if the CA certs are validate
+func ValidateAndGetCACertSHA(path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("empty global CA cert path")
+	}
+	ca, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = CreateCACert(ca)
+	if err != nil {
+		return "", err
+	}
+
+	return file.SHA1(path), nil
+}
+
+func ValidateAndGetCRLSHA(path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("empty global CRL path")
+	}
+	crl, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	pemCRLBlock, _ := pem.Decode(crl)
+	if pemCRLBlock == nil {
+		return "", fmt.Errorf("no valid PEM formatted block found in CRL %v", path)
+	}
+	// If the first certificate does not start with 'X509 CRL' it's invalid and must not be used.
+	if pemCRLBlock.Type != "X509 CRL" {
+		return "", fmt.Errorf("CRL file %v contains invalid data, and must be created only with PEM formatted certificates", path)
+	}
+
+	_, err = x509.ParseCRL(pemCRLBlock.Bytes)
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
+
+	return file.SHA1(path), nil
+}
+
 func getExtension(c *x509.Certificate, id asn1.ObjectIdentifier) []pkix.Extension {
 	var exts []pkix.Extension
 	for _, ext := range c.Extensions {

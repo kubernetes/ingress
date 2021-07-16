@@ -54,6 +54,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/internal/nginx"
 )
 
@@ -91,6 +92,10 @@ type Storer interface {
 	// The secret must contain 3 keys named:
 	//   ca.crt: contains the certificate chain used for authentication
 	GetAuthCertificate(string) (*resolver.AuthSSLCert, error)
+
+	GetGlobalAuthCertificate() (*resolver.AuthSSLCert, error)
+
+	GetGlobalSSLClientCertificatePath() string
 
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
@@ -831,6 +836,35 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 		CRLSHA:      cert.CRLSHA,
 		PemFileName: cert.PemFileName,
 	}, nil
+}
+
+func (s *k8sStore) GetGlobalSSLClientCertificatePath() string {
+	return s.GetBackendConfiguration().GlobalSSLClientCertificate
+}
+
+// GetGlobalAuthCertificate return global auth certificates from backend config
+func (s *k8sStore) GetGlobalAuthCertificate() (*resolver.AuthSSLCert, error) {
+	globalSSLCAFileName := s.GetBackendConfiguration().GlobalSSLClientCertificate
+	caSHA, err := ssl.ValidateAndGetCACertSHA(globalSSLCAFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	authSSLCert := &resolver.AuthSSLCert{
+		CAFileName: globalSSLCAFileName,
+		CASHA:      caSHA,
+	}
+
+	globalSSLCRLFileName := s.GetBackendConfiguration().GlobalSSLCRL
+	crlSHA, err := ssl.ValidateAndGetCRLSHA(globalSSLCRLFileName)
+	if err == nil {
+		authSSLCert.CRLFileName = globalSSLCRLFileName
+		authSSLCert.CRLSHA = crlSHA
+	} else if globalSSLCRLFileName != "" {
+		return nil, err
+	}
+
+	return authSSLCert, nil
 }
 
 func (s *k8sStore) writeSSLSessionTicketKey(cmap *corev1.ConfigMap, fileName string) {

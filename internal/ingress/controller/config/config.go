@@ -739,6 +739,10 @@ type Configuration struct {
 	// GlobalRateLimitStatucCode determines the HTTP status code to return
 	// when limit is exceeding during global rate limiting.
 	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
+
+	GlobalSSLClientCertificate string `json:"global-ssl-client-certificate"`
+
+	GlobalSSLCRL string `json:"global"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -896,6 +900,8 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
+		GlobalSSLClientCertificate:             "",
+		GlobalSSLCRL:                           "",
 	}
 
 	if klog.V(5).Enabled() {

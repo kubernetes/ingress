@@ -61,6 +61,8 @@ const (
 	globalAuthSnippet             = "global-auth-snippet"
 	globalAuthCacheKey            = "global-auth-cache-key"
 	globalAuthCacheDuration       = "global-auth-cache-duration"
+	globalSSLClientCertificate    = "global-ssl-client-certificate"
+	globalSSLCRL                  = "global-ssl-crl"
 	luaSharedDictsKey             = "lua-shared-dicts"
 	plugins                       = "plugins"
 )
@@ -311,6 +313,20 @@ func ReadConfig(src map[string]string) config.Configuration {
 			klog.Warningf("Global auth location denied - %s", err)
 		}
 		to.GlobalExternalAuth.AuthCacheDuration = cacheDurations
+	}
+
+	if val, ok := conf[globalSSLClientCertificate]; ok {
+		delete(conf, globalSSLClientCertificate)
+		if val != "" {
+			to.GlobalSSLClientCertificate = val
+		}
+	}
+
+	if val, ok := conf[globalSSLCRL]; ok {
+		delete(conf, globalSSLCRL)
+		if val != "" {
+			to.GlobalSSLCRL = val
+		}
 	}
 
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value

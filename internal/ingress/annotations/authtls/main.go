@@ -34,7 +34,8 @@ const (
 )
 
 var (
-	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
+	authVerifyClientRegex        = regexp.MustCompile(`on|off|optional|optional_no_ca`)
+	validationEnabledClientRegex = regexp.MustCompile(`on|optional|optional_no_ca`)
 )
 
 // Config contains the AuthSSLCert used for mutual authentication
@@ -91,21 +92,37 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	config := &Config{}
 
 	tlsauthsecret, err := parser.GetStringAnnotation("auth-tls-secret", ing)
-	if err != nil {
-		return &Config{}, err
-	}
+	if err == nil {
+		_, _, err = k8s.ParseNameNS(tlsauthsecret)
+		if err != nil {
+			return &Config{}, ing_errors.NewLocationDenied(err.Error())
+		}
 
-	_, _, err = k8s.ParseNameNS(tlsauthsecret)
-	if err != nil {
-		return &Config{}, ing_errors.NewLocationDenied(err.Error())
-	}
+		authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
+		if err != nil {
+			e := errors.Wrap(err, "error obtaining certificate")
+			return &Config{}, ing_errors.LocationDenied{Reason: e}
+		}
+		config.AuthSSLCert = *authCert
+	} else {
+		// Only enabled global ssl auth validation when auth-tls-verify-client is
+		// set to either `on|optional|optional_no_ca` and that auth-tls-secret is not set
+		authTLSVerifyClient, err := parser.GetStringAnnotation("auth-tls-verify-client", ing)
+		if err != nil || !validationEnabledClientRegex.MatchString(authTLSVerifyClient) {
+			return &Config{}, nil
+		}
 
-	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
-	if err != nil {
-		e := errors.Wrap(err, "error obtaining certificate")
-		return &Config{}, ing_errors.LocationDenied{Reason: e}
+		if a.r.GetGlobalSSLClientCertificatePath() == "" {
+			return &Config{}, nil
+		}
+
+		authCert, err := a.r.GetGlobalAuthCertificate()
+		if err != nil {
+			e := errors.Wrap(err, "error obtaining certificates from auth-tls-secret and global ssl cert")
+			return &Config{}, ing_errors.LocationDenied{Reason: e}
+		}
+		config.AuthSSLCert = *authCert
 	}
-	config.AuthSSLCert = *authCert
 
 	config.VerifyClient, err = parser.GetStringAnnotation("auth-tls-verify-client", ing)
 	if err != nil || !authVerifyClientRegex.MatchString(config.VerifyClient) {

@@ -39,6 +39,10 @@ type Resolver interface {
 	//   ca.crl: contains the revocation list used for authentication
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 
+	GetGlobalSSLClientCertificatePath() string
+
+	GetGlobalAuthCertificate() (*AuthSSLCert, error)
+
 	// GetService searches for services containing the namespace and name using a the character /
 	GetService(string) (*apiv1.Service, error)
 }

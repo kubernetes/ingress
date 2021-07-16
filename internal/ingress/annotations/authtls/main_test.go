@@ -17,6 +17,7 @@ limitations under the License.
 package authtls
 
 import (
+	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -180,6 +181,132 @@ func TestInvalidAnnotations(t *testing.T) {
 		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
 	}
 
+}
+
+type mockGlobalSSL struct {
+	mockSecret
+	EnableGlobalSSL bool
+}
+
+func (m mockGlobalSSL) GetGlobalAuthCertificate() (*resolver.AuthSSLCert, error) {
+	if !m.EnableGlobalSSL {
+		return nil, fmt.Errorf("No global ssl auth certificate")
+	}
+
+	return &resolver.AuthSSLCert{
+		CAFileName:  "/etc/ssl/global_ca.crt",
+		CASHA:       "abc",
+		CRLFileName: "/etc/ssl/global_crl.crt",
+		CRLSHA:      "egf",
+	}, nil
+}
+
+func (m mockGlobalSSL) GetGlobalSSLClientCertificatePath() string {
+	if !m.EnableGlobalSSL {
+		return ""
+	}
+	return "/etc/ssl/global_ca.crt"
+}
+
+func TestAuthAnnotation(t *testing.T) {
+	ing := buildIngress()
+	fakeGlobalSSL := &mockGlobalSSL{}
+	data := map[string]string{}
+	cfg1 := &Config{}
+
+	// No annotation with global ssl disabled
+	fakeGlobalSSL.EnableGlobalSSL = false
+	i, err := NewParser(fakeGlobalSSL).Parse(ing)
+	if err != nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+	u, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+	if !u.Equal(cfg1) {
+		t.Errorf("expected *Config %v but got %v", cfg1, u)
+	}
+
+	// No annotation with with global ssl enabled
+	fakeGlobalSSL.EnableGlobalSSL = true
+	i, err = NewParser(fakeGlobalSSL).Parse(ing)
+	if err != nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+	u, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+	if !u.Equal(cfg1) {
+		t.Errorf("expected *Config %v but got %v", cfg1, u)
+	}
+
+	// auth-tls-verify-client off with global ssl enabled
+	fakeGlobalSSL.EnableGlobalSSL = true
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "off"
+	ing.SetAnnotations(data)
+	i, err = NewParser(fakeGlobalSSL).Parse(ing)
+	if err != nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+	u, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+	if !u.Equal(cfg1) {
+		t.Errorf("expected *Config %v but got %v", cfg1, u)
+	}
+
+	// auth-tls-verify-client on with global ssl disabled
+	fakeGlobalSSL.EnableGlobalSSL = false
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "on"
+	ing.SetAnnotations(data)
+	i, err = NewParser(fakeGlobalSSL).Parse(ing)
+	if err != nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+	u, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+	if !u.Equal(cfg1) {
+		t.Errorf("expected *Config %v but got %v", cfg1, u)
+	}
+
+	// auth-tls-verify-client on with global ssl enabled
+	fakeGlobalSSL.EnableGlobalSSL = true
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "on"
+	i, err = NewParser(fakeGlobalSSL).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error with ingress: %v", err)
+	}
+	u, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+
+	if u.CAFileName != "/etc/ssl/global_ca.crt" {
+		t.Errorf("expected ca cert path of %v but got %v", "/etc/ssl/global_ca.crt", u.CAFileName)
+	}
+
+	// auth-tls-verify-client on with auth-tls-secret and global ssl enabled
+	fakeGlobalSSL.EnableGlobalSSL = true
+	data[parser.GetAnnotationWithPrefix("auth-tls-secret")] = "default/demo-secret"
+	data[parser.GetAnnotationWithPrefix("auth-tls-verify-client")] = "on"
+	ing.SetAnnotations(data)
+	i, err = NewParser(fakeGlobalSSL).Parse(ing)
+	if err != nil {
+		t.Errorf("Unexpected error with ingress: %v", err)
+	}
+	u, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected *Config but got %v", u)
+	}
+
+	if u.CAFileName != "/ssl/ca.crt" {
+		t.Errorf("expected ca cert path of %v but got %v", "/ssl/ca.crt", u.CAFileName)
+	}
 }
 
 func TestEquals(t *testing.T) {
