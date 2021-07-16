@@ -1,4 +1,10 @@
-{{- if and .Values.rbac.create (not .Values.rbac.scope) -}}
+{{- if .Values.rbac.create }}
+
+{{- if and .Values.rbac.scope (not .Values.controller.scope.enabled) -}}
+  {{ required "Invalid configuration: 'rbac.scope' should be equal to 'controller.scope.enabled' (true/false)." (index (dict) ".") }}
+{{- end }}
+
+{{- if not .Values.rbac.scope -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -72,4 +78,6 @@ rules:
       - get
       - list
       - watch
+{{- end }}
+
 {{- end }}
