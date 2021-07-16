@@ -27,10 +27,6 @@ spec:
 {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
   namespaceSelector: {{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | nindent 4 }}
-{{ else }}
-  namespaceSelector:
-    matchNames:
-      - {{ .Release.Namespace }}
 {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
   targetLabels:
