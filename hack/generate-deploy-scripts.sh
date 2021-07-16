@@ -27,6 +27,9 @@ DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 RELEASE_NAME=ingress-nginx
 NAMESPACE=ingress-nginx
 
+# ensures `ttlSecondsAfterFinished` gets set on Job specs
+API_VERSIONS=batch/v1alpha1
+
 NAMESPACE_VAR="
 apiVersion: v1
 kind: Namespace
@@ -39,7 +42,7 @@ metadata:
 
 # Baremetal
 OUTPUT_FILE="${DIR}/deploy/static/provider/baremetal/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: NodePort
@@ -53,7 +56,7 @@ $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 # Cloud - generic
 OUTPUT_FILE="${DIR}/deploy/static/provider/cloud/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: LoadBalancer
@@ -66,7 +69,7 @@ $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 # AWS - NLB
 OUTPUT_FILE="${DIR}/deploy/static/provider/aws/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: LoadBalancer
@@ -82,7 +85,7 @@ $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 
 OUTPUT_FILE="${DIR}/deploy/static/provider/aws/deploy-tls-termination.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: LoadBalancer
@@ -124,7 +127,7 @@ $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 # Kind - https://kind.sigs.k8s.io/docs/user/ingress/
 OUTPUT_FILE="${DIR}/deploy/static/provider/kind/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   updateStrategy:
     type: RollingUpdate
@@ -154,7 +157,7 @@ echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 OUTPUT_FILE="${DIR}/deploy/static/provider/do/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: LoadBalancer
@@ -171,7 +174,7 @@ echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 OUTPUT_FILE="${DIR}/deploy/static/provider/scw/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   service:
     type: LoadBalancer
@@ -188,7 +191,7 @@ echo "${NAMESPACE_VAR}
 $(cat ${OUTPUT_FILE})" > ${OUTPUT_FILE}
 
 OUTPUT_FILE="${DIR}/deploy/static/provider/exoscale/deploy.yaml"
-cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
+cat << EOF | helm template $RELEASE_NAME ${DIR}/charts/ingress-nginx --namespace $NAMESPACE --api-versions $API_VERSIONS --values - | $DIR/hack/add-namespace.py $NAMESPACE > ${OUTPUT_FILE}
 controller:
   kind: DaemonSet
   service:

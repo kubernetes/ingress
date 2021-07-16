@@ -583,6 +583,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: admission-webhook
 spec:
+  # Alpha feature since k8s 1.12
+  ttlSecondsAfterFinished: 0
   template:
     metadata:
       name: ingress-nginx-admission-create
@@ -631,6 +633,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: admission-webhook
 spec:
+  # Alpha feature since k8s 1.12
+  ttlSecondsAfterFinished: 0
   template:
     metadata:
       name: ingress-nginx-admission-patch
