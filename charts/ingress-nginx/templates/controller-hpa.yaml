@@ -22,9 +22,9 @@ spec:
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
   metrics:
   {{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
-  - type: Resource 
-    resource: 
-      name: memory 
+  - type: Resource
+    resource:
+      name: memory
       target:
         type: Utilization
         averageUtilization: {{ . }}
@@ -38,7 +38,11 @@ spec:
         averageUtilization: {{ . }}
   {{- end }}
   {{- with .Values.controller.autoscalingTemplate }}
-{{- toYaml . | nindent 2 }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .Values.controller.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
 {{- end }}
