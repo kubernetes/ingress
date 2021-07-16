@@ -247,7 +247,11 @@ local function route_to_alternative_balancer(balancer)
     end
   end
 
-  if math.random(100) <= traffic_shaping_policy.weight then
+  local weightTotal = 100
+  if traffic_shaping_policy.weightTotal ~= nil and traffic_shaping_policy.weightTotal > 100 then
+    weightTotal = traffic_shaping_policy.weightTotal
+  end
+  if math.random(weightTotal) <= traffic_shaping_policy.weight then
     return true
   end
 

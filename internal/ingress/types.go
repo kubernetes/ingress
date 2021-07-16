@@ -111,10 +111,15 @@ type Backend struct {
 // alternative backend
 // +k8s:deepcopy-gen=true
 type TrafficShapingPolicy struct {
-	// Weight (0-100) of traffic to redirect to the backend.
-	// e.g. Weight 20 means 20% of traffic will be redirected to the backend and 80% will remain
-	// with the other backend. 0 weight will not send any traffic to this backend
+	// Weight (0-<WeightTotal>) of traffic to redirect to the backend.
+	// e.g. <WeightTotal> defaults to 100, weight 20 means 20% of traffic will be
+	// redirected to the backend and 80% will remain with the other backend. If
+	// <WeightTotal> is set to 1000, weight 2 means 0.2% of traffic will be
+	// redirected to the backend and 99.8% will remain with the other backend.
+	// 0 weight will not send any traffic to this backend
 	Weight int `json:"weight"`
+	// The total weight of traffic (>= 100). If unspecified, it defaults to 100.
+	WeightTotal int `json:"weightTotal"`
 	// Header on which to redirect requests to this backend
 	Header string `json:"header"`
 	// HeaderValue on which to redirect requests to this backend

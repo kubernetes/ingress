@@ -736,6 +736,27 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Status(http.StatusOK).
 				Body().
 				Contains(canaryService)
+
+			ginkgo.By("returning requests from the canary only when weight is equal to weightTotal")
+
+			err = framework.UpdateIngress(f.KubeClientSet, f.Namespace, canaryIngName,
+				func(ingress *networking.Ingress) error {
+					ingress.ObjectMeta.Annotations = map[string]string{
+						"nginx.ingress.kubernetes.io/canary":              "true",
+						"nginx.ingress.kubernetes.io/canary-weight":       "1000",
+						"nginx.ingress.kubernetes.io/canary-weight-total": "1000",
+					}
+					return nil
+				})
+			assert.Nil(ginkgo.GinkgoT(), err)
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusOK).
+				Body().
+				Contains(canaryService)
 		})
 	})
 

@@ -170,6 +170,13 @@ describe("Balancer", function()
         balancer.sync_backend(backend)
         assert.equal(false, balancer.route_to_alternative_balancer(_balancer))
       end)
+
+      it("returns true when weight is 1000 and weight total is 1000", function()
+        backend.trafficShapingPolicy.weight = 1000
+        backend.trafficShapingPolicy.weightTotal = 1000
+        balancer.sync_backend(backend)
+        assert.equal(true, balancer.route_to_alternative_balancer(_balancer))
+      end)
     end)
 
     context("canary by cookie", function()
