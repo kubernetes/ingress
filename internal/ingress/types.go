@@ -20,6 +20,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/ingress-nginx/internal/sets"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/auth"
@@ -30,6 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipblocklist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
@@ -219,6 +221,7 @@ type Server struct {
 // is required.
 // The chain in the execution order of annotations should be:
 // - Whitelist
+// - Blocklist
 // - RateLimit
 // - BasicDigestAuth
 // - ExternalAuth
@@ -292,6 +295,10 @@ type Location struct {
 	// addresses or networks are allowed.
 	// +optional
 	Whitelist ipwhitelist.SourceRange `json:"whitelist,omitempty"`
+	// Blocklist indicates connections from certain client
+	// addresses or networks will be rejected..
+	// +optional
+	Blocklist ipblocklist.SourceRange `json:"blocklist,omitempty"`
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
@@ -401,4 +408,21 @@ type Ingress struct {
 
 // GeneralConfig holds the definition of lua general configuration data
 type GeneralConfig struct {
+}
+
+// SourceRange returns the CIDR
+type SourceRange struct {
+	CIDR []string `json:"cidr,omitempty"`
+}
+
+// Equal tests for equality between two SourceRange types
+func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
+	if sr1 == sr2 {
+		return true
+	}
+	if sr1 == nil || sr2 == nil {
+		return false
+	}
+
+	return sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
 }

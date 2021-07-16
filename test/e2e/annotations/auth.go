@@ -346,7 +346,7 @@ http {
 }
 `
 
-		f.NGINXWithConfigDeployment(framework.HTTPBinService, cfg)
+		f.NGINXWithConfigDeployment(framework.HTTPBinService, cfg, 1)
 
 		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)

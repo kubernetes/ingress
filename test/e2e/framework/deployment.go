@@ -102,7 +102,6 @@ http {
 	client_max_body_size 0;
 
 	server {
-		access_log on;
 		access_log /dev/stdout;
 
 		listen 80;
@@ -124,11 +123,11 @@ http {
 
 `
 
-	f.NGINXWithConfigDeployment(SlowEchoService, cfg)
+	f.NGINXWithConfigDeployment(SlowEchoService, cfg, 1)
 }
 
 // NGINXWithConfigDeployment creates an NGINX deployment using a configmap containing the nginx.conf configuration
-func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
+func (f *Framework) NGINXWithConfigDeployment(name string, cfg string, replicas int32) {
 	cfgMap := map[string]string{
 		"nginx.conf": cfg,
 	}
@@ -142,7 +141,7 @@ func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
 	}, metav1.CreateOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
 
-	deployment := newDeployment(name, f.Namespace, NginxBaseImage, 80, 1,
+	deployment := newDeployment(name, f.Namespace, NginxBaseImage, 80, replicas,
 		nil,
 		[]corev1.VolumeMount{
 			{
@@ -190,7 +189,7 @@ func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
 
 	f.EnsureService(service)
 
-	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 1)
+	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, int(replicas))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2021 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package ipwhitelist
+package ipblocklist
 
 import (
 	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
-
 	networking "k8s.io/api/networking/v1beta1"
-	"k8s.io/ingress-nginx/internal/net"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/internal/sets"
 )
 
@@ -48,45 +47,45 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 	return sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
 }
 
-type ipwhitelist struct {
+type ipblocklist struct {
 	r resolver.Resolver
 }
 
-// NewParser creates a new whitelist annotation parser
+// NewParser creates a new blocklist annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return ipwhitelist{r}
+	return ipblocklist{r}
 }
 
 // Parse parses the annotations contained in the ingress
-// rule used to limit access to certain client addresses or networks.
+// rule used to deny access from certain client addresses or networks.
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
-func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
+func (a ipblocklist) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
-	sort.Strings(defBackend.WhitelistSourceRange)
+	sort.Strings(defBackend.BlocklistSourceRange)
 
-	val, err := parser.GetStringAnnotation("whitelist-source-range", ing)
+	val, err := parser.GetStringAnnotation("blocklist-source-range", ing)
 	// A missing annotation is not a problem, just use the default
 	if err == ing_errors.ErrMissingAnnotations {
-		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, nil
+		return &SourceRange{CIDR: defBackend.BlocklistSourceRange}, nil
 	}
 
 	values := strings.Split(val, ",")
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
-		return &SourceRange{CIDR: defBackend.WhitelistSourceRange}, ing_errors.LocationDenied{
+		// No valid ips,
+		return &SourceRange{CIDR: defBackend.BlocklistSourceRange}, ing_errors.LocationDenied{
 			Reason: errors.Wrap(err, "the annotation does not contain a valid IP address or network"),
 		}
 	}
 
-	cidrs := []string{}
+	cidrs := make([]string, 0, len(ipnets)+len(ips))
 	for k := range ipnets {
 		cidrs = append(cidrs, k)
 	}
 	for k := range ips {
 		cidrs = append(cidrs, k)
 	}
-
 	sort.Strings(cidrs)
 
 	return &SourceRange{cidrs}, nil

@@ -1170,6 +1170,10 @@ stream {
             {{ range $ip := $location.Whitelist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
+            {{ else if gt (len $location.Blocklist.CIDR) 0 }}
+            {{ range $ip := $location.Blocklist.CIDR }}
+            deny {{ $ip }};{{ end }}
+            allow all;
             {{ end }}
 
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}

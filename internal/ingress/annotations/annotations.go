@@ -19,6 +19,7 @@ package annotations
 import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipblocklist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
@@ -109,6 +110,7 @@ type Ingress struct {
 	LoadBalancing      string
 	UpstreamVhost      string
 	Whitelist          ipwhitelist.SourceRange
+	Blocklist          ipblocklist.SourceRange
 	XForwardedPrefix   string
 	SSLCipher          sslcipher.Config
 	Logs               log.Config
@@ -158,6 +160,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"Blocklist":            ipblocklist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCipher":            sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),

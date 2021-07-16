@@ -139,6 +139,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
 	WhitelistSourceRange []string `json:"whitelist-source-range"`
 
+	// BlocklistSourceRange denies access from certain client addresses
+	// http://nginx.org/en/docs/http/ngx_http_access_module.html
+	BlocklistSourceRange []string `json:"blocklist-source-range"`
+
 	// Limits the rate of response transmission to a client.
 	// The rate is specified in bytes per second. The zero value disables rate limiting.
 	// The limit is set per a request, and so if a client simultaneously opens two connections,

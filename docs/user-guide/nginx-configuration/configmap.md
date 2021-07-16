@@ -170,6 +170,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-request-buffering](#proxy-request-buffering)|string|"on"|
 |[ssl-redirect](#ssl-redirect)|bool|"true"|
 |[whitelist-source-range](#whitelist-source-range)|[]string|[]string{}|
+|[blocklist-source-range](#blocklist-source-range)|[]string|[]string{}|
 |[skip-access-log-urls](#skip-access-log-urls)|[]string|[]string{}|
 |[limit-rate](#limit-rate)|int|0|
 |[limit-rate-after](#limit-rate-after)|int|0|
@@ -1014,6 +1015,11 @@ _**default:**_ "true"
 ## whitelist-source-range
 
 Sets the default whitelisted IPs for each `server` block. This can be overwritten by an annotation on an Ingress rule.
+See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_module.html).
+
+## blocklist-source-range
+
+Sets the default blocklisted IPs for each `server` block. This can be overwritten by an annotation on an Ingress rule.
 See [ngx_http_access_module](http://nginx.org/en/docs/http/ngx_http_access_module.html).
 
 ## skip-access-log-urls

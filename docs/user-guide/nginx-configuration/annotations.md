@@ -101,6 +101,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/load-balance](#custom-nginx-load-balancing)|string|
 |[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
 |[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
+|[nginx.ingress.kubernetes.io/blocklist-source-range](#blocklist-source-range)|CIDR|
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
 |[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|
 |[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
@@ -608,6 +609,18 @@ To configure this setting globally for all Ingress rules, the `whitelist-source-
 
 !!! note
     Adding an annotation to an Ingress rule overrides any global restriction.
+
+### Blocklist source range
+
+You can specify denied client IP source ranges through the `nginx.ingress.kubernetes.io/blocklist-source-range` annotation.
+The value is a comma separated list of [CIDRs](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), e.g.  `10.0.0.0/24,172.10.0.1`.
+
+To configure this setting globally for all Ingress rules, the `blocklist-source-range` value may be set in the [NGINX ConfigMap](./configmap.md#blocklist-source-range).
+
+!!! note
+Adding an annotation to an Ingress rule overrides any global restriction.
+
+If there is an `nginx.ingress.kubernetes.io/whitelist-source-range` annotation in your Ingress resource, the `nginx.ingress.kubernetes.io/blocklist-source-range` will be ignored.
 
 ### Custom timeouts
 
