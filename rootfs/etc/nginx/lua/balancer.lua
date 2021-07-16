@@ -17,6 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
+local ip_matcher = require("resty.ipmatcher")
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -249,6 +250,13 @@ local function route_to_alternative_balancer(balancer)
 
   if math.random(100) <= traffic_shaping_policy.weight then
     return true
+  end
+
+  local ipRange = traffic_shaping_policy.ipRange
+  if ipRange then
+    local ip_arr = util.split(ipRange, ",")
+    local ip_matcher = ip_matcher.new(ip_arr)
+    return ip_matcher:match(util.request_addr())
   end
 
   return false

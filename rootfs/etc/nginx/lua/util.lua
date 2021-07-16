@@ -180,4 +180,37 @@ local function replace_special_char(str, a, b)
 end
 _M.replace_special_char = replace_special_char
 
+local function request_addr()
+    local req_headers = ngx.req.get_headers()
+    local cli_addr = req_headers["x-forwarded-for"]
+    if cli_addr == nil or string.len(cli_addr) == 0 or cli_addr == "unknown" then
+        cli_addr = req_headers["Proxy-Client-IP"]
+    end
+    if cli_addr == nil or string.len(cli_addr) == 0 or cli_addr == "unknown" then
+        cli_addr = req_headers["WL-Proxy-Client-IP"]
+    end
+    if cli_addr == nil or string.len(cli_addr) == 0 or cli_addr == "unknown" then
+        cli_addr = ngx.var.remote_addr
+    end
+    -- Represents the situation through multiple agents, the first IP is the real IP of the client, and multiple IPs are divided according to','
+    if cli_addr ~= nil and string.len(cli_addr) >15  then
+        local pos  = string.find(cli_addr, ",", 1)
+        cli_addr = string.sub(cli_addr,1,pos-1)
+    end
+    return cli_addr
+end
+_M.request_addr = request_addr
+
+local function split(inputstr, sep)
+    if sep == nil then
+        sep ="%s"
+    end
+    local t={}
+    for str in string.gmatch(inputstr,"([^"..sep.."]+)") do
+        table.insert(t, str)
+    end
+    return t
+end
+_M.split = split
+
 return _M

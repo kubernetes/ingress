@@ -123,6 +123,8 @@ type TrafficShapingPolicy struct {
 	HeaderPattern string `json:"headerPattern"`
 	// Cookie on which to redirect requests to this backend
 	Cookie string `json:"cookie"`
+	// Ip on which to redirect requests to this backend
+	IpRange string `json:"ipRange"`
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash

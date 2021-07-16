@@ -18,10 +18,10 @@ package canary
 
 import (
 	networking "k8s.io/api/networking/v1beta1"
-
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
+	"strings"
 )
 
 type canary struct {
@@ -36,6 +36,7 @@ type Config struct {
 	HeaderValue   string
 	HeaderPattern string
 	Cookie        string
+	IpRange       string
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -79,8 +80,17 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Cookie = ""
 	}
 
+	config.IpRange, err = parser.GetStringAnnotation("canary-by-ip-range", ing)
+	if err != nil {
+		config.IpRange = ""
+	}
+
+	if len(config.IpRange) > 0 {
+		config.IpRange = strings.ReplaceAll(config.IpRange, "*", "0")
+	}
+
 	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 ||
-		len(config.HeaderPattern) > 0) {
+		len(config.HeaderPattern) > 0 || len(config.IpRange) > 0) {
 		return nil, errors.NewInvalidAnnotationConfiguration("canary", "configured but not enabled")
 	}
 

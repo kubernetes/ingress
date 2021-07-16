@@ -258,6 +258,10 @@ func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
 		return false
 	}
 
+	if tsp1.IpRange != tsp2.IpRange {
+		return false
+	}
+
 	return true
 }
 
