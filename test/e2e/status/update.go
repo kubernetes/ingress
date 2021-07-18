@@ -94,7 +94,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 
 		err = f.KubeClientSet.CoreV1().
 			ConfigMaps(f.Namespace).
-			Delete(context.TODO(), "ingress-controller-leader-nginx", metav1.DeleteOptions{})
+			Delete(context.TODO(), "ingress-controller-leader", metav1.DeleteOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting leader election configmap")
 
 		_, cmd, err = f.KubectlProxy(port)

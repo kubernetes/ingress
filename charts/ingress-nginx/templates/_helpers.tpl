@@ -62,14 +62,6 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Create a default fully qualified IngressClass ClusterRole name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-*/}}
-{{- define "ingress-nginx.ingressclassclrole.fullname" -}}
-{{- printf "ingressclass-%s" .Values.controller.ingressClass | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
 Common labels
 */}}
 {{- define "ingress-nginx.labels" -}}

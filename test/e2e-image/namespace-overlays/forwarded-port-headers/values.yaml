@@ -14,7 +14,9 @@ controller:
     https-port: "1443"
     # e2e tests do not require information about ingress status
     update-status: "false"
-
+  ingressClassResource:
+    # We will create and remove each IC/ClusterRole/ClusterRoleBinding per test so there's no conflict
+    enabled: false
   scope:
     enabled: true
 

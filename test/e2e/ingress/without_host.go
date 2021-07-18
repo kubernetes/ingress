@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] definition without host", func
 				Namespace: f.Namespace,
 			},
 			Spec: networking.IngressSpec{
-				IngressClassName: &f.Namespace,
+				IngressClassName: &f.IngressClass,
 				DefaultBackend: &networking.IngressBackend{
 					Service: &networking.IngressServiceBackend{
 						Name: framework.EchoService,

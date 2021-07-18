@@ -80,7 +80,7 @@ func buildIngressWithNonexistentService(host, namespace, path string) *networkin
 			Namespace: namespace,
 		},
 		Spec: networking.IngressSpec{
-			IngressClassName: &namespace,
+			IngressClassName: framework.GetIngressClassName(namespace),
 			Rules: []networking.IngressRule{
 				{
 					Host: host,
@@ -116,7 +116,7 @@ func buildIngressWithUnavailableServiceEndpoints(host, namespace, path string) (
 				Namespace: namespace,
 			},
 			Spec: networking.IngressSpec{
-				IngressClassName: &namespace,
+				IngressClassName: framework.GetIngressClassName(namespace),
 				Rules: []networking.IngressRule{
 					{
 						Host: host,

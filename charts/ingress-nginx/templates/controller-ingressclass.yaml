@@ -10,7 +10,7 @@ metadata:
     {{- with .Values.controller.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  name: {{ .Values.controller.ingressClass }}
+  name: {{ .Values.controller.ingressClassResource.name }}
 {{- if .Values.controller.ingressClassResource.default }}
   annotations:
     ingressclass.kubernetes.io/is-default-class: "true"
@@ -18,35 +18,4 @@ metadata:
 spec:
   controller: {{ .Values.controller.ingressClassResource.controllerValue }}
   {{ template "ingressClass.parameters" . }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    {{- include "ingress-nginx.labels" . | nindent 4 }}
-  name: {{ include "ingress-nginx.ingressclassclrole.fullname" . }}
-rules:
-  - apiGroups:
-      - networking.k8s.io 
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    {{- include "ingress-nginx.labels" . | nindent 4 }}
-  name: {{ include "ingress-nginx.ingressclassclrole.fullname" . }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "ingress-nginx.ingressclassclrole.fullname" . }}
-subjects:
-  - kind: ServiceAccount
-    name: {{ template "ingress-nginx.serviceAccountName" . }}
-    namespace: {{ .Release.Namespace | quote }}
 {{- end }}
