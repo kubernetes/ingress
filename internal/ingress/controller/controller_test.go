@@ -45,6 +45,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
@@ -188,7 +189,7 @@ func TestCheckIngress(t *testing.T) {
 			},
 		},
 	}
-
+	/* TODO: Right now we have stopped to check IngressClass in Admission
 	t.Run("When the ingress class differs from nginx", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "different"
 		nginx.command = testNginxTestCommand{
@@ -199,7 +200,7 @@ func TestCheckIngress(t *testing.T) {
 			t.Errorf("with a different ingress class, no error should be returned")
 		}
 	})
-
+	*/
 	t.Run("when the class is the nginx one", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
 		nginx.command = testNginxTestCommand{
@@ -1899,7 +1900,12 @@ func newNGINXController(t *testing.T) *NGINXController {
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
-		false)
+		false,
+		&ingressclass.IngressClassConfiguration{
+			Controller:      "k8s.io/ingress-nginx",
+			AnnotationValue: "nginx",
+		},
+	)
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{
@@ -1957,7 +1963,11 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.Confi
 		10*time.Minute,
 		clientSet,
 		channels.NewRingChannel(10),
-		false)
+		false,
+		&ingressclass.IngressClassConfiguration{
+			Controller:      "k8s.io/ingress-nginx",
+			AnnotationValue: "nginx",
+		})
 
 	sslCert := ssl.GetFakeSSLCert()
 	config := &Configuration{

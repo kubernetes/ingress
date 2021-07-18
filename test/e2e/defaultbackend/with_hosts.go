@@ -47,6 +47,7 @@ var _ = framework.IngressNginxDescribe("[Default Backend] change default setting
 				Annotations: annotations,
 			},
 			Spec: networking.IngressSpec{
+				IngressClassName: &f.IngressClass,
 				DefaultBackend: &networking.IngressBackend{
 					Service: &networking.IngressServiceBackend{
 						Name: framework.EchoService,

@@ -26,7 +26,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 )
 
@@ -66,7 +65,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(metricsPerHost bool, registry *prometheus.Registry) (Collector, error) {
+func NewCollector(metricsPerHost bool, registry *prometheus.Registry, ingressclass string) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -74,22 +73,22 @@ func NewCollector(metricsPerHost bool, registry *prometheus.Registry) (Collector
 
 	podName := os.Getenv("POD_NAME")
 
-	nc, err := collectors.NewNGINXStatus(podName, podNamespace, class.IngressClass)
+	nc, err := collectors.NewNGINXStatus(podName, podNamespace, ingressclass)
 	if err != nil {
 		return nil, err
 	}
 
-	pc, err := collectors.NewNGINXProcess(podName, podNamespace, class.IngressClass)
+	pc, err := collectors.NewNGINXProcess(podName, podNamespace, ingressclass)
 	if err != nil {
 		return nil, err
 	}
 
-	s, err := collectors.NewSocketCollector(podName, podNamespace, class.IngressClass, metricsPerHost)
+	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost)
 	if err != nil {
 		return nil, err
 	}
 
-	ic := collectors.NewController(podName, podNamespace, class.IngressClass)
+	ic := collectors.NewController(podName, podNamespace, ingressclass)
 
 	return Collector(&collector{
 		nginxStatus:  nc,

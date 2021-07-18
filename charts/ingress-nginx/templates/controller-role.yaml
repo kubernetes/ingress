@@ -34,8 +34,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
+      - networking.k8s.io
     resources:
       - ingresses
     verbs:
@@ -43,14 +42,13 @@ rules:
       - list
       - watch
   - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
+      - networking.k8s.io
     resources:
       - ingresses/status
     verbs:
       - update
   - apiGroups:
-      - "networking.k8s.io" # k8s 1.14+
+      - networking.k8s.io
     resources:
       - ingressclasses
     verbs:
@@ -62,7 +60,7 @@ rules:
     resources:
       - configmaps
     resourceNames:
-      - {{ .Values.controller.electionID }}-{{ .Values.controller.ingressClass }}
+      - {{ .Values.controller.electionID }}
     verbs:
       - get
       - update

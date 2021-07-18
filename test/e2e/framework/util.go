@@ -24,6 +24,8 @@ import (
 
 	"github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -31,6 +33,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
+
+	"k8s.io/ingress-nginx/internal/k8s"
 )
 
 const (
@@ -115,6 +119,93 @@ func deleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 		GracePeriodSeconds: &grace,
 		PropagationPolicy:  &pb,
 	})
+}
+
+// CreateIngressClass creates a new IngressClass related to a test/namespace and also
+// the required ClusterRole/ClusterRoleBinding
+func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error) {
+	icname := fmt.Sprintf("ic-%s", namespace)
+	var err error
+
+	ic, err := c.NetworkingV1().IngressClasses().
+		Create(context.TODO(), &networkingv1.IngressClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: icname,
+			},
+			Spec: networkingv1.IngressClassSpec{
+				Controller: k8s.IngressNGINXController,
+			},
+		}, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("Unexpected error creating IngressClass %s: %v", icname, err)
+	}
+
+	_, err = c.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{Name: icname},
+		Rules: []rbacv1.PolicyRule{{
+			APIGroups: []string{"networking.k8s.io"},
+			Resources: []string{"ingressclasses"},
+			Verbs:     []string{"get", "list", "watch"},
+		}},
+	}, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("Unexpected error creating IngressClass ClusterRole %s: %v", icname, err)
+	}
+
+	_, err = c.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: icname,
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     icname,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				APIGroup:  "",
+				Kind:      "ServiceAccount",
+				Namespace: namespace,
+				Name:      "nginx-ingress",
+			},
+		},
+	}, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("Unexpected error creating IngressClass ClusterRoleBinding %s: %v", icname, err)
+	}
+	return ic.Name, nil
+}
+
+//deleteIngressClass deletes an IngressClass and its related ClusterRole* objects
+func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
+	var err error
+	grace := int64(0)
+	pb := metav1.DeletePropagationBackground
+	deleteOptions := metav1.DeleteOptions{
+		GracePeriodSeconds: &grace,
+		PropagationPolicy:  &pb,
+	}
+	err = c.NetworkingV1().IngressClasses().Delete(context.TODO(), ingressclass, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("Unexpected error deleting IngressClass %s: %v", ingressclass, err)
+	}
+
+	err = c.RbacV1().ClusterRoleBindings().Delete(context.TODO(), ingressclass, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("Unexpected error deleting IngressClass ClusterRoleBinding %s: %v", ingressclass, err)
+	}
+	err = c.RbacV1().ClusterRoles().Delete(context.TODO(), ingressclass, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("Unexpected error deleting IngressClass ClusterRole %s: %v", ingressclass, err)
+	}
+
+	return nil
+}
+
+//GetIngressClassName returns the default IngressClassName given a namespace
+func GetIngressClassName(namespace string) *string {
+	icname := fmt.Sprintf("ic-%s", namespace)
+	return &icname
 }
 
 // WaitForKubeNamespaceNotExist waits until a namespaces is not present in the cluster

@@ -33,11 +33,11 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -99,6 +99,8 @@ type Configuration struct {
 	SyncRateLimit float32
 
 	DisableCatchAll bool
+
+	IngressClassConfiguration *ingressclass.IngressClassConfiguration
 
 	ValidationWebhook         string
 	ValidationWebhookCertPath string
@@ -220,11 +222,11 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if !ing.DeletionTimestamp.IsZero() {
 		return nil
 	}
-
-	if !class.IsValid(ing) {
-		klog.Warningf("ignoring ingress %v in %v based on annotation %v", ing.Name, ing.ObjectMeta.Namespace, class.IngressKey)
+	/* TODO: Should we / how can we check for ingress class?
+	if !n.cfg.IngressClassConfiguration.IsValid(ing) {
+		klog.Warningf("ignoring ingress %v in %v as it does not belong to any IngressClass this controller is watching", ing.Name, ing.ObjectMeta.Namespace)
 		return nil
-	}
+	}*/
 
 	if n.cfg.Namespace != "" && ing.ObjectMeta.Namespace != n.cfg.Namespace {
 		klog.Warningf("ignoring ingress %v in namespace %v different from the namespace watched %s", ing.Name, ing.ObjectMeta.Namespace, n.cfg.Namespace)

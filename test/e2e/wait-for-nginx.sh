@@ -73,6 +73,10 @@ controller:
     periodSeconds: 1
   service:
     type: NodePort
+  electionID: ingress-controller-leader
+  ingressClassResource:
+    # We will create and remove each IC/ClusterRole/ClusterRoleBinding per test so there's no conflict
+    enabled: false
   extraArgs:
     tcp-services-configmap: $NAMESPACE/tcp-services
     # e2e tests do not require information about ingress status

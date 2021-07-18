@@ -76,15 +76,13 @@ controller:
   ##
   electionID: ingress-controller-leader
 
-  ## Name of the ingress class to route through this controller
-  ##
-  ingressClass: nginx
-
   # This section refers to the creation of the IngressClass resource
-  # IngressClass resources are supported since k8s >= 1.18
+  # IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
   ingressClassResource:
-    enabled: false
+    name: nginx
+    enabled: true
     default: false
+    controllerValue: "k8s.io/ingress-nginx"
 
     # Parameters is a link to a custom resource containing additional
     # configuration for the controller. This is optional if the controller

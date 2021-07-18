@@ -29,7 +29,7 @@ import (
 	testclient "k8s.io/client-go/kubernetes/fake"
 
 	"k8s.io/ingress-nginx/internal/ingress"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/class"
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/task"
 )
@@ -214,7 +214,7 @@ func buildExtensionsIngresses() []networking.Ingress {
 				Name:      "foo_ingress_different_class",
 				Namespace: metav1.NamespaceDefault,
 				Annotations: map[string]string{
-					class.IngressKey: "no-nginx",
+					ingressclass.IngressKey: "no-nginx",
 				},
 			},
 			Status: networking.IngressStatus{

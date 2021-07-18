@@ -68,7 +68,8 @@ type Framework struct {
 	KubeConfig             *restclient.Config
 	APIExtensionsClientSet apiextcs.Interface
 
-	Namespace string
+	Namespace    string
+	IngressClass string
 
 	pod *corev1.Pod
 }
@@ -108,6 +109,9 @@ func (f *Framework) BeforeEach() {
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating namespace")
 
+	f.IngressClass, err = CreateIngressClass(f.Namespace, f.KubeClientSet)
+	assert.Nil(ginkgo.GinkgoT(), err, "creating IngressClass")
+
 	err = f.newIngressController(f.Namespace, f.BaseName)
 	assert.Nil(ginkgo.GinkgoT(), err, "deploying the ingress controller")
 
@@ -126,6 +130,14 @@ func (f *Framework) AfterEach() {
 			assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
 		}()
 	}(f.KubeClientSet, f.Namespace)
+
+	defer func(kubeClient kubernetes.Interface, ingressclass string) {
+		go func() {
+			defer ginkgo.GinkgoRecover()
+			err := deleteIngressClass(kubeClient, ingressclass)
+			assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
+		}()
+	}(f.KubeClientSet, f.IngressClass)
 
 	if !ginkgo.CurrentGinkgoTestDescription().Failed {
 		return
@@ -580,6 +592,7 @@ func NewSingleIngress(name, path, host, ns, service string, port int, annotation
 func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
+		IngressClassName: GetIngressClassName(ns),
 		Rules: []networking.IngressRule{
 			{
 				Host: host,
@@ -611,6 +624,7 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 func newSingleIngressWithRules(name, path, host, ns, service string, port int, annotations map[string]string, tlsHosts []string) *networking.Ingress {
 	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
+		IngressClassName: GetIngressClassName(ns),
 		Rules: []networking.IngressRule{
 			{
 				IngressRuleValue: networking.IngressRuleValue{
@@ -656,6 +670,7 @@ func newSingleIngressWithRules(name, path, host, ns, service string, port int, a
 func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService string, defaultPort int, service string, port int, annotations map[string]string) *networking.Ingress {
 	pathtype := networking.PathTypePrefix
 	spec := networking.IngressSpec{
+		IngressClassName: GetIngressClassName(ns),
 		DefaultBackend: &networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
 				Name: defaultService,
@@ -695,6 +710,7 @@ func NewSingleIngressWithBackendAndRules(name, path, host, ns, defaultService st
 // NewSingleCatchAllIngress creates a simple ingress with a catch-all backend
 func NewSingleCatchAllIngress(name, ns, service string, port int, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
+		IngressClassName: GetIngressClassName(ns),
 		DefaultBackend: &networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
 				Name: service,

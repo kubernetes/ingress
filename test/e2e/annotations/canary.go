@@ -22,9 +22,7 @@ import (
 	"strings"
 
 	"github.com/onsi/ginkgo"
-	"github.com/stretchr/testify/assert"
 
-	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -32,7 +30,7 @@ const (
 	canaryService = "echo-canary"
 )
 
-var _ = framework.DescribeAnnotation("canary-*", func() {
+var _ = framework.DescribeAnnotation("canary", func() {
 	f := framework.NewDefaultFramework("canary")
 
 	ginkgo.BeforeEach(func() {
@@ -327,15 +325,25 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
-			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, canaryIngName,
-				func(ingress *networking.Ingress) error {
-					ingress.ObjectMeta.Annotations = map[string]string{
-						"nginx.ingress.kubernetes.io/canary":           "true",
-						"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
-					}
-					return nil
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
 				})
-			assert.Nil(ginkgo.GinkgoT(), err)
+
+			newAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":           "true",
+				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
+			}
+
+			modIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, newAnnotations)
+
+			f.UpdateIngress(modIng)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
 
 			ginkgo.By("routing requests destined for the mainline ingress to the mainline upstream")
 			f.HTTPTestClient().
@@ -707,6 +715,11 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				f.Namespace, canaryService, 80, canaryAnnotations)
 			f.EnsureIngress(canaryIng)
 
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
 			ginkgo.By("returning requests from the mainline only when weight is equal to 0")
 			f.HTTPTestClient().
 				GET("/").
@@ -719,15 +732,20 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			ginkgo.By("returning requests from the canary only when weight is equal to 100")
 
-			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, canaryIngName,
-				func(ingress *networking.Ingress) error {
-					ingress.ObjectMeta.Annotations = map[string]string{
-						"nginx.ingress.kubernetes.io/canary":        "true",
-						"nginx.ingress.kubernetes.io/canary-weight": "100",
-					}
-					return nil
+			newAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":        "true",
+				"nginx.ingress.kubernetes.io/canary-weight": "100",
+			}
+
+			modIng := framework.NewSingleIngress(canaryIngName, "/", host,
+				f.Namespace, canaryService, 80, newAnnotations)
+
+			f.UpdateIngress(modIng)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
 				})
-			assert.Nil(ginkgo.GinkgoT(), err)
 
 			f.HTTPTestClient().
 				GET("/").
