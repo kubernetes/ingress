@@ -14,6 +14,10 @@ function _M.new(self, o)
   return o
 end
 
+function _M.is_affinitized()
+  return false
+end
+
 function _M.sync(self, backend)
   self.traffic_shaping_policy = backend.trafficShapingPolicy
   self.alternative_backends = backend.alternativeBackends

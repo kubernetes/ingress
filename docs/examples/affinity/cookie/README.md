@@ -10,6 +10,7 @@ Session affinity can be configured using the following annotations:
 | --- | --- | --- |
 |nginx.ingress.kubernetes.io/affinity|Type of the affinity, set this to `cookie` to enable session affinity|string (NGINX only supports `cookie`)|
 |nginx.ingress.kubernetes.io/affinity-mode|The affinity mode defines how sticky a session is. Use `balanced` to redistribute some sessions when scaling pods or `persistent` for maximum stickiness.|`balanced` (default) or `persistent`|
+|nginx.ingress.kubernetes.io/affinity-canary-behavior|Defines session affinity behavior of canaries. By default the behavior is `sticky`, and canaries respect session affinity configuration. Set this to `legacy` to restore original canary behavior, when session affinity parameters were not respected.|`sticky` (default) or `legacy`|
 |nginx.ingress.kubernetes.io/session-cookie-name|Name of the cookie that will be created|string (defaults to `INGRESSCOOKIE`)|
 |nginx.ingress.kubernetes.io/session-cookie-path|Path that will be set on the cookie (required if your [Ingress paths][ingress-paths] use regular expressions)|string (defaults to the currently [matched path][ingress-paths])|
 |nginx.ingress.kubernetes.io/session-cookie-samesite|SameSite attribute to apply to the cookie|Browser accepted values are `None`, `Lax`, and `Strict`|

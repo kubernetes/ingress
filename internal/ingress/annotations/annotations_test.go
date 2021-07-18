@@ -30,19 +30,20 @@ import (
 )
 
 var (
-	annotationPassthrough          = parser.GetAnnotationWithPrefix("ssl-passthrough")
-	annotationAffinityType         = parser.GetAnnotationWithPrefix("affinity")
-	annotationAffinityMode         = parser.GetAnnotationWithPrefix("affinity-mode")
-	annotationCorsEnabled          = parser.GetAnnotationWithPrefix("enable-cors")
-	annotationCorsAllowMethods     = parser.GetAnnotationWithPrefix("cors-allow-methods")
-	annotationCorsAllowHeaders     = parser.GetAnnotationWithPrefix("cors-allow-headers")
-	annotationCorsExposeHeaders    = parser.GetAnnotationWithPrefix("cors-expose-headers")
-	annotationCorsAllowCredentials = parser.GetAnnotationWithPrefix("cors-allow-credentials")
-	defaultCorsMethods             = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
-	defaultCorsHeaders             = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
-	annotationAffinityCookieName   = parser.GetAnnotationWithPrefix("session-cookie-name")
-	annotationUpstreamHashBy       = parser.GetAnnotationWithPrefix("upstream-hash-by")
-	annotationCustomHTTPErrors     = parser.GetAnnotationWithPrefix("custom-http-errors")
+	annotationPassthrough            = parser.GetAnnotationWithPrefix("ssl-passthrough")
+	annotationAffinityType           = parser.GetAnnotationWithPrefix("affinity")
+	annotationAffinityMode           = parser.GetAnnotationWithPrefix("affinity-mode")
+	annotationAffinityCanaryBehavior = parser.GetAnnotationWithPrefix("affinity-canary-behavior")
+	annotationCorsEnabled            = parser.GetAnnotationWithPrefix("enable-cors")
+	annotationCorsAllowMethods       = parser.GetAnnotationWithPrefix("cors-allow-methods")
+	annotationCorsAllowHeaders       = parser.GetAnnotationWithPrefix("cors-allow-headers")
+	annotationCorsExposeHeaders      = parser.GetAnnotationWithPrefix("cors-expose-headers")
+	annotationCorsAllowCredentials   = parser.GetAnnotationWithPrefix("cors-allow-credentials")
+	defaultCorsMethods               = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	defaultCorsHeaders               = "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+	annotationAffinityCookieName     = parser.GetAnnotationWithPrefix("session-cookie-name")
+	annotationUpstreamHashBy         = parser.GetAnnotationWithPrefix("upstream-hash-by")
+	annotationCustomHTTPErrors       = parser.GetAnnotationWithPrefix("custom-http-errors")
 )
 
 type mockCfg struct {
@@ -162,29 +163,38 @@ func TestAffinitySession(t *testing.T) {
 	ing := buildIngress()
 
 	fooAnns := []struct {
-		annotations  map[string]string
-		affinitytype string
-		affinitymode string
-		name         string
+		annotations    map[string]string
+		affinitytype   string
+		affinitymode   string
+		cookiename     string
+		canarybehavior string
 	}{
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "route"}, "cookie", "balanced", "route"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "persistent", annotationAffinityCookieName: "route1"}, "cookie", "persistent", "route1"},
-		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: ""}, "cookie", "balanced", "INGRESSCOOKIE"},
-		{map[string]string{}, "", "", ""},
-		{nil, "", "", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "route", annotationAffinityCanaryBehavior: ""}, "cookie", "balanced", "route", ""},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "persistent", annotationAffinityCookieName: "route1", annotationAffinityCanaryBehavior: "sticky"}, "cookie", "persistent", "route1", "sticky"},
+		{map[string]string{annotationAffinityType: "cookie", annotationAffinityMode: "balanced", annotationAffinityCookieName: "", annotationAffinityCanaryBehavior: "legacy"}, "cookie", "balanced", "INGRESSCOOKIE", "legacy"},
+		{map[string]string{}, "", "", "", ""},
+		{nil, "", "", "", ""},
 	}
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
 		r := ec.Extract(ing).SessionAffinity
-		t.Logf("Testing pass %v %v", foo.affinitytype, foo.name)
+		t.Logf("Testing pass %v %v", foo.affinitytype, foo.cookiename)
 
-		if r.Mode != foo.affinitymode {
-			t.Errorf("Returned %v but expected %v for Name", r.Mode, foo.affinitymode)
+		if r.Type != foo.affinitytype {
+			t.Errorf("Returned %v but expected %v for Type", r.Type, foo.affinitytype)
 		}
 
-		if r.Cookie.Name != foo.name {
-			t.Errorf("Returned %v but expected %v for Name", r.Cookie.Name, foo.name)
+		if r.Mode != foo.affinitymode {
+			t.Errorf("Returned %v but expected %v for Mode", r.Mode, foo.affinitymode)
+		}
+
+		if r.CanaryBehavior != foo.canarybehavior {
+			t.Errorf("Returned %v but expected %v for CanaryBehavior", r.CanaryBehavior, foo.canarybehavior)
+		}
+
+		if r.Cookie.Name != foo.cookiename {
+			t.Errorf("Returned %v but expected %v for Cookie.Name", r.Cookie.Name, foo.cookiename)
 		}
 	}
 }

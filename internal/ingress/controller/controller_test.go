@@ -44,6 +44,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/sessionaffinity"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -786,6 +787,326 @@ func TestMergeAlternativeBackends(t *testing.T) {
 				},
 			},
 		},
+		"alternative backend gets SessionAffinitySettings configured when CanaryBehavior is 'sticky'": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													ServiceName: "http-svc-canary",
+													ServicePort: intstr.IntOrString{
+														IntVal: 80,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				ParsedAnnotations: &annotations.Ingress{
+					SessionAffinity: sessionaffinity.Config{
+						CanaryBehavior: "sticky",
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
+		"alternative backend gets SessionAffinitySettings configured when CanaryBehavior is not 'legacy'": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													ServiceName: "http-svc-canary",
+													ServicePort: intstr.IntOrString{
+														IntVal: 80,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				ParsedAnnotations: &annotations.Ingress{
+					SessionAffinity: sessionaffinity.Config{
+						CanaryBehavior: "", // In fact any value but 'legacy' would do the trick.
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
+		"alternative backend doesn't get SessionAffinitySettings configured when CanaryBehavior is 'legacy'": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													ServiceName: "http-svc-canary",
+													ServicePort: intstr.IntOrString{
+														IntVal: 80,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				ParsedAnnotations: &annotations.Ingress{
+					SessionAffinity: sessionaffinity.Config{
+						CanaryBehavior: "legacy",
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:     "example-http-svc-80",
+					NoServer: false,
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-80": {
+					Name:                "example-http-svc-80",
+					NoServer:            false,
+					AlternativeBackends: []string{"example-http-svc-canary-80"},
+					SessionAffinity: ingress.SessionAffinityConfig{
+						AffinityType: "cookie",
+						AffinityMode: "balanced",
+						CookieSessionAffinity: ingress.CookieSessionAffinity{
+							Name: "test",
+						},
+					},
+				},
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for title, tc := range testCases {
@@ -801,7 +1122,7 @@ func TestMergeAlternativeBackends(t *testing.T) {
 				if !actualUpstream.Equal(expUpstream) {
 					t.Logf("actual upstream %s alternative backends: %s", actualUpstream.Name, actualUpstream.AlternativeBackends)
 					t.Logf("expected upstream %s alternative backends: %s", expUpstream.Name, expUpstream.AlternativeBackends)
-					t.Errorf("upstream %s was not equal to what was expected: ", upsName)
+					t.Errorf("upstream %s was not equal to what was expected", actualUpstream.Name)
 				}
 			}
 

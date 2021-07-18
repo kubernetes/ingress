@@ -27,8 +27,10 @@ import (
 )
 
 const (
-	annotationAffinityType = "affinity"
-	annotationAffinityMode = "affinity-mode"
+	annotationAffinityType           = "affinity"
+	annotationAffinityMode           = "affinity-mode"
+	annotationAffinityCanaryBehavior = "affinity-canary-behavior"
+
 	// If a cookie with this name exists,
 	// its value is used as an index into the list of available backends.
 	annotationAffinityCookieName = "session-cookie-name"
@@ -66,6 +68,8 @@ type Config struct {
 	Type string `json:"type"`
 	// The affinity mode, i.e. how sticky a session is
 	Mode string `json:"mode"`
+	// Affinity behavior for canaries (sticky or legacy)
+	CanaryBehavior string `json:"canaryBehavior"`
 	Cookie
 }
 
@@ -160,6 +164,11 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 		am = ""
 	}
 
+	cb, err := parser.GetStringAnnotation(annotationAffinityCanaryBehavior, ing)
+	if err != nil {
+		cb = ""
+	}
+
 	switch at {
 	case "cookie":
 		cookie = a.cookieAffinityParse(ing)
@@ -169,8 +178,9 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	return &Config{
-		Type:   at,
-		Mode:   am,
-		Cookie: *cookie,
+		Type:           at,
+		Mode:           am,
+		CanaryBehavior: cb,
+		Cookie:         *cookie,
 	}, nil
 }

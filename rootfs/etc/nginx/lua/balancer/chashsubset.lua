@@ -68,6 +68,10 @@ function _M.new(self, backend)
   return o
 end
 
+function _M.is_affinitized()
+  return false
+end
+
 function _M.balance(self)
   local key = util.generate_var_value(self.hash_by)
   local subset_id = self.instance:find(key)

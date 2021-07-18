@@ -65,4 +65,19 @@ function _M.split_upstream_addr(addrs_str)
   return host_and_ports
 end
 
+-- Splits string by delimiter. Returns array of parsed values and the length of the array.
+function _M.split_string(what, delim)
+  local result = {}
+  local idx = 0
+
+  if what and delim and delim ~= "" then
+    for chunk in what:gmatch("([^" .. delim .. "]+)") do
+      idx = idx + 1
+      result[idx] = chunk
+    end
+  end
+
+  return result, idx
+end
+
 return _M

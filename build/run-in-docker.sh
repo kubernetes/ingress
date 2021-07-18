@@ -25,6 +25,9 @@ set -o pipefail
 # temporal directory for the /etc/ingress-controller directory
 INGRESS_VOLUME=$(mktemp -d)
 
+# make sure directory for SSL cert storage exists under ingress volume
+mkdir "${INGRESS_VOLUME}/ssl"
+
 if [[ "$OSTYPE" == darwin* ]]; then
   INGRESS_VOLUME=/private$INGRESS_VOLUME
 fi

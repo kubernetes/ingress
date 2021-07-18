@@ -170,6 +170,10 @@ local function calculate_slow_start_ewma(self)
   return total_ewma / endpoints_count
 end
 
+function _M.is_affinitized()
+  return false
+end
+
 function _M.balance(self)
   local peers = self.peers
   local endpoint, ewma_score = peers[1], -1

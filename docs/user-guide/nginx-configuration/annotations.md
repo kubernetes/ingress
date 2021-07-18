@@ -18,6 +18,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
 |[nginx.ingress.kubernetes.io/affinity-mode](#session-affinity)|"balanced" or "persistent"|
+|[nginx.ingress.kubernetes.io/affinity-canary-behavior](#session-affinity)|"sticky" or "legacy"|
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|
@@ -140,7 +141,7 @@ In some cases, you may want to "canary" a new set of changes by sending a small 
 Canary rules are evaluated in order of precedence. Precedence is as follows:
 `canary-by-header -> canary-by-cookie -> canary-weight`
 
-**Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance` and `nginx.ingress.kubernetes.io/upstream-hash-by`.
+**Note** that when you mark an ingress as canary, then all the other non-canary annotations will be ignored (inherited from the corresponding main ingress) except `nginx.ingress.kubernetes.io/load-balance`, `nginx.ingress.kubernetes.io/upstream-hash-by`, and [annotations related to session affinity](#session-affinity). If you want to restore the original behavior of canaries when session affinity was ignored, set `nginx.ingress.kubernetes.io/affinity-canary-behavior` annotation with value `legacy` on the non-canary ingress definition.
 
 **Known Limitations**
 
@@ -162,6 +163,8 @@ The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affin
 The only affinity type available for NGINX is `cookie`.
 
 The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickiness of a session. Setting this to `balanced` (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to `persistent` will not rebalance sessions to new servers, therefore providing maximum stickiness.
+
+The annotation `nginx.ingress.kubernetes.io/affinity-canary-behavior` defines the behavior of canaries when session affinity is enabled. Setting this to `sticky` (default) will ensure that users that were served by canaries, will continue to be served by canaries. Setting this to `legacy` will restore original canary behavior, when session affinity was ignored.
 
 !!! attention
     If more than one Ingress is defined for a host and at least one Ingress uses `nginx.ingress.kubernetes.io/affinity: cookie`, then only paths on the Ingress using `nginx.ingress.kubernetes.io/affinity` will use session cookie affinity. All paths defined on other Ingresses for the host will be load balanced through the random selection of a backend server.
@@ -342,7 +345,7 @@ CORS can be controlled with the following annotations:
   - Example: `nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For, X-app123-XPTO"`
 
 * `nginx.ingress.kubernetes.io/cors-expose-headers`
-  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts 
+  controls which headers are exposed to response. This is a multi-valued field, separated by ',' and accepts
   letters, numbers, _, - and *.
   - Default: *empty*
   - Example: `nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"`
