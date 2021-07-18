@@ -54,14 +54,14 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | __2.4 Network Configuration__ ||| |
 | 2.4.1 Ensure NGINX only listens for network connections on authorized ports (Not Scored)| OK | Ensured by automatic nginx.conf configuration| |
 | 2.4.2 Ensure requests for unknown host names are rejected (Not Scored)| OK | They are not rejected but send to the "default backend" delivering appropriate errors (mostly 404)| |
-| 2.4.3 Ensure keepalive_timeout is 10 seconds or less, but not 0 (Scored)| ACTION NEEDED| Default is 75s | configure keep-alive to 10 seconds [according to this documentation](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#keep-alive) |
+| 2.4.3 Ensure keepalive_timeout is 10 seconds or less, but not 0 (Scored)| ACTION NEEDED| Default is 75s | configure keep-alive to 10 seconds [according to this documentation](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#keep-alive) |
 | 2.4.4 Ensure send_timeout is set to 10 seconds or less, but not 0 (Scored)| RISK TO BE ACCEPTED| Not configured, however the nginx default is 60s| Not configurable|
 | ||| |
 | __2.5 Information Disclosure__||| |
 | 2.5.1 Ensure server_tokens directive is set to `off` (Scored) | OK | server_tokens is configured to off by default| |
 | 2.5.2 Ensure default error and index.html pages do not reference NGINX (Scored) | ACTION NEEDED| 404 shows no version at all, 503 and 403 show "nginx", which is hardcoded [see this line in nginx source code](https://github.com/nginx/nginx/blob/master/src/http/ngx_http_special_response.c#L36) | configure custom error pages at least for 403, 404 and 503 and 500|
 | 2.5.3 Ensure hidden file serving is disabled (Not Scored) | ACTION NEEDED | config not set | configure a config.server-snippet Snippet, but beware of .well-known challenges or similar. Refer to the benchmark here please |
-| 2.5.4 Ensure the NGINX reverse proxy does not enable information disclosure (Scored)| ACTION NEEDED| hide not configured| configure hide-headers with array of "X-Powered-By" and "Server": [according to this documentation](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#hide-headers) |
+| 2.5.4 Ensure the NGINX reverse proxy does not enable information disclosure (Scored)| ACTION NEEDED| hide not configured| configure hide-headers with array of "X-Powered-By" and "Server": [according to this documentation](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#hide-headers) |
 | ||| |
 | __3 Logging__ ||| |
 | ||| |
@@ -86,7 +86,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 4.1.8 Ensure HTTP Strict Transport Security (HSTS) is enabled (Scored)| OK | HSTS is enabled by default | |
 | 4.1.9 Ensure HTTP Public Key Pinning is enabled (Not Scored)| ACTION NEEDED / RISK TO BE ACCEPTED | HKPK not enabled by default | If lets encrypt is not used, set correct HPKP header. There are several ways to implement this - with the helm charts it works via controller.add-headers. If lets encrypt is used, this is complicated, a solution here is yet unknown |
 | 4.1.10 Ensure upstream server traffic is authenticated with a client certificate (Scored) | DEPENDS ON BACKEND | Highly dependent on backends, not every backend allows configuring this, can also be mitigated via a service mesh| If backend allows it, [manual is here](https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/)|
-| 4.1.11 Ensure the upstream traffic server certificate is trusted (Not Scored) | DEPENDS ON BACKEND | Highly dependent on backends, not every backend allows configuring this, can also be mitigated via a service mesh| If backend allows it, [see configuration here](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md#backend-certificate-authentication) |
+| 4.1.11 Ensure the upstream traffic server certificate is trusted (Not Scored) | DEPENDS ON BACKEND | Highly dependent on backends, not every backend allows configuring this, can also be mitigated via a service mesh| If backend allows it, [see configuration here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#backend-certificate-authentication) |
 | 4.1.12 Ensure your domain is preloaded (Not Scored) | ACTION NEEDED| Preload is not active by default | Set controller.config.hsts-preload to true|
 | 4.1.13 Ensure session resumption is disabled to enable perfect forward security (Scored)| OK | Session tickets are disabled by default | |
 | 4.1.14 Ensure HTTP/2.0 is used (Not Scored) | OK | http2 is set by default| |
@@ -98,9 +98,9 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | 5.1.2 Ensure only whitelisted HTTP methods are allowed (Not Scored) | OK/ACTION NEEDED | Depends on use case| If required it can be set via config snippet|
 | ||| |
 | __5.2 Request Limits__||| |
-| 5.2.1 Ensure timeout values for reading the client header and body are set correctly (Scored) | ACTION NEEDED| Default timeout is 60s | Set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#client-header-timeout) and respective body equivalent|
-| 5.2.2 Ensure the maximum request body size is set correctly (Scored)| ACTION NEEDED| Default is 1m| set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#proxy-body-size)|
-| 5.2.3 Ensure the maximum buffer size for URIs is defined (Scored) | ACTION NEEDED| Default is 4 8k| Set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md#large-client-header-buffers)|
+| 5.2.1 Ensure timeout values for reading the client header and body are set correctly (Scored) | ACTION NEEDED| Default timeout is 60s | Set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#client-header-timeout) and respective body equivalent|
+| 5.2.2 Ensure the maximum request body size is set correctly (Scored)| ACTION NEEDED| Default is 1m| set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#proxy-body-size)|
+| 5.2.3 Ensure the maximum buffer size for URIs is defined (Scored) | ACTION NEEDED| Default is 4 8k| Set via [this configuration parameter](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#large-client-header-buffers)|
 | 5.2.4 Ensure the number of connections per IP address is limited (Not Scored) | OK/ACTION NEEDED| No limit set| Depends on use case, limit can be set via [these annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting)|
 | 5.2.5 Ensure rate limits by IP address are set (Not Scored) | OK/ACTION NEEDED| No limit set| Depends on use case, limit can be set via [these annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#rate-limiting)|
 | ||| |

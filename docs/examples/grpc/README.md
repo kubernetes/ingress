@@ -17,7 +17,7 @@ nginx controller.
    for grpc support.
 4. You have a backend application running a gRPC server and listening for TCP
    traffic.  If you prefer, you can use the
-   [fortune-teller](https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller)
+   [fortune-teller](https://github.com/kubernetes/ingress-nginx/tree/main/images/grpc-fortune-teller)
    application provided here as an example.
 
 ### Step 1: kubernetes `Deployment`
@@ -30,7 +30,7 @@ This is a standard kubernetes deployment object.  It is running a grpc service
 listening on port `50051`.
 
 The sample application
-[fortune-teller-app](https://github.com/kubernetes/ingress-nginx/tree/master/images/grpc-fortune-teller)
+[fortune-teller-app](https://github.com/kubernetes/ingress-nginx/tree/main/images/grpc-fortune-teller)
 is a grpc server implemented in go. Here's the stripped-down implementation:
 
 ```go

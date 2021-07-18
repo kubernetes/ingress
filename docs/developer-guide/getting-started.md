@@ -65,7 +65,7 @@ FOCUS="no-auth-locations" make kind-e2e-test
 !!! note
     The variable `FOCUS` defines Ginkgo [Focused Specs](https://onsi.github.io/ginkgo/#focused-specs)
 
-Valid values are defined in the describe definition of the e2e tests like [Default Backend](https://github.com/kubernetes/ingress-nginx/blob/master/test/e2e/defaultbackend/default_backend.go#L29)
+Valid values are defined in the describe definition of the e2e tests like [Default Backend](https://github.com/kubernetes/ingress-nginx/blob/main/test/e2e/defaultbackend/default_backend.go#L29)
 
 The complete list of tests can be found [here](e2e-tests.md)
 

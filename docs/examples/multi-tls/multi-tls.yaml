@@ -103,13 +103,13 @@ spec:
     - foo.bar.com
     # This secret must exist beforehand
     # The cert must also contain the subj-name foo.bar.com
-    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+    # https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/PREREQUISITES.md#tls-certificates
     secretName: foobar
   - hosts:
     - bar.baz.com
     # This secret must exist beforehand
     # The cert must also contain the subj-name bar.baz.com
-    # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+    # https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/PREREQUISITES.md#tls-certificates
     secretName: barbaz
   rules:
   - host: foo.bar.com

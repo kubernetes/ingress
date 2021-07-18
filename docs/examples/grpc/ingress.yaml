@@ -18,7 +18,7 @@ spec:
   tls:
   # This secret must exist beforehand
   # The cert must also contain the subj-name fortune-teller.stack.build
-  # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
+  # https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/PREREQUISITES.md#tls-certificates
   - secretName: fortune-teller.stack.build
     hosts:
       - fortune-teller.stack.build
